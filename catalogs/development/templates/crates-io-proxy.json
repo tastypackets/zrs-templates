@@ -6,7 +6,7 @@
   "version": 1,
   "name": "crates.io proxy",
   "description": "Caching proxy for the crates.io registry.",
-  "about": "Caches the crates.io sparse index and crate downloads. Requires an x86-64 host. Configure source replacement in each Cargo client, using sparse+<proxy URL>/index/ as the registry index. The proxy serves plain HTTP without authentication.",
+  "about": "Caches the crates.io sparse index and crate downloads on Linux x86-64. Each Cargo client needs source replacement configured with sparse+<proxy URL>/index/. Serves HTTP without authentication.",
   "upstream": "https://github.com/ravenexp/crates-io-proxy",
   "categories": [
     "development"
@@ -15,7 +15,7 @@
     {
       "key": "cache_dir",
       "label": "Cache folder",
-      "description": "Stores cached index entries and crate files. The folder must be writable by UID 777.",
+      "description": "Folder for cached index entries and crate files, writable by UID 777.",
       "type": "path",
       "required": true,
       "default": "{{zrs_app_folder}}"
@@ -23,7 +23,7 @@
     {
       "key": "host_port",
       "label": "Host port",
-      "description": "The port cargo clients connect to.",
+      "description": "Port for Cargo requests.",
       "type": "port",
       "required": true,
       "default": 3080
@@ -31,7 +31,7 @@
     {
       "key": "proxy_url",
       "label": "Proxy URL",
-      "description": "Base URL reachable by Cargo clients, including the host port. Used to generate crate download links.",
+      "description": "URL Cargo clients use to reach the proxy, including the host port.",
       "type": "text",
       "required": true,
       "placeholder": "http://server.example.com:3080/"
@@ -39,7 +39,7 @@
     {
       "key": "cache_ttl",
       "label": "Index cache lifetime (seconds)",
-      "description": "How long a cached index entry is served before the proxy fetches it again.",
+      "description": "Seconds before a cached index entry expires.",
       "type": "number",
       "integer": true,
       "min": 1,
