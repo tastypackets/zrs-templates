@@ -12,8 +12,31 @@ jobs:
   validate:
     name: Catalog checks
     runs-on: ubuntu-latest
+    outputs:
+      tooling: ${{ steps.changes.outputs.tooling }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check for tooling changes
+        id: changes
+        env:
+          BEFORE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          AFTER: ${{ github.event.pull_request.head.sha || github.sha }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ -z "$BEFORE" ] || [[ "$BEFORE" =~ ^0+$ ]]; then
+            echo 'tooling=true' >> "$GITHUB_OUTPUT"
+          else
+            if [ "$EVENT" = pull_request ]; then
+              BEFORE=$(git merge-base "$BEFORE" "$AFTER")
+            fi
+            changes=$(git diff --name-only "$BEFORE" "$AFTER" -- action.yml scripts .github/workflows)
+            if [ -n "$changes" ]; then
+              echo 'tooling=true' >> "$GITHUB_OUTPUT"
+            fi
+          fi
 
       - name: Download CLI
         id: cli
@@ -50,3 +73,20 @@ jobs:
           "$RUNNER_TEMP/zrs-template" --strict --allow=unpinned_image
           "$RUNNER_TEMP/zrs-template" --strict --allow=unpinned_image \
             --patterns=$'templates/**/*.json\npacks/**/*.json\n**/*.source.json'
+
+  tooling:
+    name: Tooling tests
+    needs: validate
+    if: ${{ !cancelled() && needs.validate.outputs.tooling == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Test Action
+        run: bash scripts/test-action.sh
+
+      - name: Test catalog publishing
+        run: bash scripts/test-catalog-publish.sh
+
+      - name: Test catalog selection
+        run: bash scripts/test-changed-catalogs.sh
