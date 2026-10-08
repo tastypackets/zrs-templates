@@ -10,7 +10,7 @@ esac
 : "${R2_TEMPLATES_BUCKET:?missing R2_TEMPLATES_BUCKET}"
 : "${AWS_ACCESS_KEY_ID:?missing AWS_ACCESS_KEY_ID}"
 : "${AWS_SECRET_ACCESS_KEY:?missing AWS_SECRET_ACCESS_KEY}"
-: "${GITHUB_SHA:?missing GITHUB_SHA}"
+revision=${CATALOG_REVISION:-${GITHUB_SHA:?missing GITHUB_SHA}}
 : "${GITHUB_RUN_ID:?missing GITHUB_RUN_ID}"
 : "${GITHUB_RUN_ATTEMPT:?missing GITHUB_RUN_ATTEMPT}"
 
@@ -26,7 +26,7 @@ aws --endpoint-url "https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com" s3api put-o
 scratch=$(mktemp)
 trap 'rm -f "$scratch"' EXIT
 curl --fail --silent --show-error --compressed --retry 3 --max-time 60 \
-  "https://templates.zrs.dev/$key?revision=$GITHUB_SHA&run=$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
+  "https://templates.zrs.dev/$key?revision=$revision&run=$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
   --output "$scratch"
 cmp "$file" "$scratch"
 printf 'Published https://templates.zrs.dev/%s\n' "$key"

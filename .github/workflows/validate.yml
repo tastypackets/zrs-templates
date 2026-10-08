@@ -9,31 +9,29 @@ permissions:
   contents: read
 
 jobs:
-  action-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - run: bash scripts/test-action.sh
-      - run: bash scripts/test-catalog-publish.sh
-
   validate:
-    strategy:
-      matrix:
-        catalog: [networking, media, development, gaming]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
-      - name: Build and validate the catalog
-        uses: ./
-        with:
-          working-directory: catalogs/${{ matrix.catalog }}
+      - name: Test tooling
+        run: |
+          bash scripts/test-action.sh
+          bash scripts/test-catalog-publish.sh
+          bash scripts/test-changed-catalogs.sh
 
-      - name: Lint individual documents
-        uses: ./
-        with:
-          working-directory: catalogs/${{ matrix.catalog }}
-          files: |
-            templates/**/*.json
-            packs/**/*.json
-            **/*.source.json
+      - name: Download CLI
+        run: bash scripts/download-cli.sh "$RUNNER_TEMP/zrs-template"
+
+      - name: Build and lint catalogs
+        run: |
+          for catalog in networking media development gaming; do
+            (
+              cd "catalogs/$catalog"
+              echo "::group::$catalog"
+              "$RUNNER_TEMP/zrs-template" --strict --allow=unpinned_image
+              "$RUNNER_TEMP/zrs-template" --strict --allow=unpinned_image \
+                --patterns=$'templates/**/*.json\npacks/**/*.json\n**/*.source.json'
+              echo '::endgroup::'
+            )
+          done

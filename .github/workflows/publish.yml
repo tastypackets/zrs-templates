@@ -4,6 +4,12 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths:
+      - 'catalogs/**'
+      - 'scripts/**'
+      - action.yml
+      - '.github/workflows/publish.yml'
+      - '.github/workflows/validate.yml'
 
 permissions:
   contents: read
@@ -11,35 +17,60 @@ permissions:
 concurrency:
   group: publish
   cancel-in-progress: false
+  queue: max
 
 jobs:
   publish:
-    strategy:
-      matrix:
-        catalog: [networking, media, development, gaming]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
-      - name: Build and validate the source
-        uses: ./
         with:
-          working-directory: catalogs/${{ matrix.catalog }}
+          fetch-depth: 0
+          ref: main
+
+      - name: Select catalogs
+        id: catalogs
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          revision=$(git rev-parse HEAD)
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+          bash scripts/changed-catalogs.sh "$BEFORE" "$revision" > "$RUNNER_TEMP/catalogs"
+          if [ -s "$RUNNER_TEMP/catalogs" ]; then
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download CLI
+        if: steps.catalogs.outputs.changed == 'true'
+        run: bash scripts/download-cli.sh "$RUNNER_TEMP/zrs-template"
+
+      - name: Build selected catalogs
+        if: steps.catalogs.outputs.changed == 'true'
+        run: |
+          while IFS= read -r catalog; do
+            (cd "catalogs/$catalog" && "$RUNNER_TEMP/zrs-template" --strict --allow=unpinned_image)
+            mkdir -p "artifacts/$catalog"
+            cp "catalogs/$catalog/templates.source.json" "artifacts/$catalog/"
+          done < "$RUNNER_TEMP/catalogs"
 
       - uses: actions/upload-artifact@v7
+        if: steps.catalogs.outputs.changed == 'true'
         with:
-          name: zrs-${{ matrix.catalog }}-source
-          path: catalogs/${{ matrix.catalog }}/templates.source.json
+          name: template-sources
+          path: artifacts/
           if-no-files-found: error
 
-      - name: Publish catalog to R2
-        if: github.repository == 'tastypackets/zrs-templates' && github.ref == 'refs/heads/main'
+      - name: Publish catalogs to R2
+        if: steps.catalogs.outputs.changed == 'true' && github.repository == 'tastypackets/zrs-templates' && github.ref == 'refs/heads/main'
         env:
-          CATALOG: ${{ matrix.catalog }}
+          CATALOG_REVISION: ${{ steps.catalogs.outputs.revision }}
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_TEMPLATES_BUCKET: ${{ vars.R2_TEMPLATES_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_TEMPLATES_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_TEMPLATES_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: auto
           AWS_REQUEST_CHECKSUM_CALCULATION: when_required
-        run: bash scripts/publish-catalog.sh "$CATALOG"
+        run: |
+          while IFS= read -r catalog; do
+            bash scripts/publish-catalog.sh "$catalog"
+          done < "$RUNNER_TEMP/catalogs"

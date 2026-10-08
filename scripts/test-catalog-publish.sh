@@ -46,6 +46,9 @@ grep -Fx 'application/json' upload-args
 grep -Fx 'public, max-age=300, must-revalidate' upload-args
 grep -F 'https://templates.zrs.dev/v1/networking/templates.source.json?revision=' download-args
 
+CATALOG_REVISION=checked-out-revision bash "$script" networking
+grep -F "revision=checked-out-revision&" download-args
+
 expect_failure() {
   if "$@"; then echo 'Expected failure' >&2; exit 1; fi
 }
