@@ -1,0 +1,92 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "nginx",
+  "version": 1,
+  "name": "Nginx",
+  "description": "Web server and reverse proxy.",
+  "about": "Serves files from the site folder by default. Supply .conf files in the config folder to define a reverse proxy or other server settings. Nginx has no web UI.",
+  "upstream": "https://nginx.org",
+  "categories": ["networking"],
+  "variables": [
+    {
+      "key": "site_dir",
+      "label": "Site folder",
+      "description": "Static files mounted read-only at /usr/share/nginx/html, readable by UID 101. The default config needs an index.html to serve requests for /.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}/html"
+    },
+    {
+      "key": "http_port",
+      "label": "HTTP port",
+      "description": "Host port mapped to container port 80, where your server block must listen.",
+      "type": "port",
+      "required": true,
+      "default": 80
+    },
+    {
+      "key": "conf_dir",
+      "label": "Config folder",
+      "description": "Existing folder of .conf files mounted read-only at /etc/nginx/conf.d. These replace the default config and must include a server block. Leave blank to use the default site.",
+      "type": "path"
+    },
+    {
+      "key": "https_port",
+      "label": "HTTPS port",
+      "description": "Host port mapped to container port 443, which needs a server block with listen 443 ssl and certificate settings. Leave blank to omit it.",
+      "type": "port"
+    },
+    {
+      "key": "certs_dir",
+      "label": "Certificates folder",
+      "description": "Existing folder of certificates and keys mounted read-only at /etc/nginx/certs. Reference that path in your config. For Certbot, mount all of /etc/letsencrypt so certificate symlinks resolve.",
+      "type": "path",
+      "level": "advanced"
+    },
+    {
+      "key": "timezone",
+      "label": "Timezone",
+      "description": "IANA name such as Europe/London. Sets the timestamps in the access and error logs.",
+      "type": "text",
+      "placeholder": "America/New_York",
+      "level": "advanced"
+    }
+  ],
+  "containers": [
+    {
+      "image": "nginx:1.30-alpine",
+      "environment": {
+        "TZ": "{{timezone}}"
+      },
+      "ports": [
+        { "container": 80, "host": "{{http_port}}" },
+        { "container": 443, "host": "{{https_port}}" }
+      ],
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "{{site_dir}}",
+          "target": "/usr/share/nginx/html",
+          "read_only": true
+        },
+        {
+          "type": "bind",
+          "source": "{{conf_dir}}",
+          "target": "/etc/nginx/conf.d",
+          "read_only": true,
+          "create_host_path": false
+        },
+        {
+          "type": "bind",
+          "source": "{{certs_dir}}",
+          "target": "/etc/nginx/certs",
+          "read_only": true,
+          "create_host_path": false
+        }
+      ],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}

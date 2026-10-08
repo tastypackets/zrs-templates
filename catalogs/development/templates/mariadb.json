@@ -1,0 +1,178 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "mariadb",
+  "version": 1,
+  "name": "MariaDB",
+  "description": "Relational database server that speaks the MySQL protocol.",
+  "about": "Relational database server using the MySQL protocol. Check application compatibility before replacing MySQL. First initialization creates the root account and optionally an application database and account.",
+  "upstream": "https://mariadb.org",
+  "categories": ["development"],
+  "variables": [
+    {
+      "key": "data_dir",
+      "label": "Data folder",
+      "description": "Host folder for database files, owned by UID 999.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}"
+    },
+    {
+      "key": "root_password",
+      "label": "Root password",
+      "description": "Sets the root password on first initialization, changing this later does not reset it. Save it before deploying.",
+      "type": "secret",
+      "required": true
+    },
+    {
+      "key": "initial_database",
+      "label": "Initial database",
+      "description": "A database created on the first run. Leave blank to create none.",
+      "type": "text"
+    },
+    {
+      "key": "app_user",
+      "label": "Application account",
+      "description": "A non-root account created on the first run, with full access to the database above and nothing else. Leave blank to create none.",
+      "type": "text"
+    },
+    {
+      "key": "app_password",
+      "label": "Application account password",
+      "description": "Password for the application account, created only when both account fields are filled in. Save it before deploying.",
+      "type": "secret"
+    },
+    {
+      "key": "host_port",
+      "label": "Host port",
+      "description": "Host port for MariaDB, unpublished when blank.",
+      "type": "port"
+    },
+    {
+      "key": "root_host",
+      "label": "Root access",
+      "description": "Where the root account may connect from. Written when the database is created and ignored on later starts. Local only leaves root reachable through the container's own socket, so anything outside has to come in as the application account.",
+      "type": "select",
+      "default": "%",
+      "options": [
+        { "value": "%", "label": "Any host" },
+        { "value": "localhost", "label": "Local only" }
+      ],
+      "level": "advanced"
+    },
+    {
+      "key": "auto_upgrade",
+      "label": "Upgrade on start",
+      "description": "Runs mariadb-upgrade when needed at startup, backing up the system database to the data folder first.",
+      "type": "toggle",
+      "true_value": "1",
+      "false_value": null,
+      "default": true,
+      "level": "advanced"
+    },
+    {
+      "key": "buffer_pool_size",
+      "label": "InnoDB buffer pool (MiB)",
+      "description": "Memory for cached InnoDB data and indexes, passed on the command line to override config files.",
+      "type": "number",
+      "integer": true,
+      "min": 1,
+      "level": "advanced"
+    },
+    {
+      "key": "max_connections",
+      "label": "Maximum connections",
+      "description": "Maximum simultaneous client connections, 151 when blank.",
+      "type": "number",
+      "integer": true,
+      "min": 1,
+      "level": "advanced"
+    },
+    {
+      "key": "transaction_isolation",
+      "label": "Transaction isolation",
+      "description": "Transaction visibility level, repeatable read when blank.",
+      "type": "select",
+      "options": [
+        { "value": "REPEATABLE-READ", "label": "Repeatable read" },
+        { "value": "READ-COMMITTED", "label": "Read committed" },
+        { "value": "READ-UNCOMMITTED", "label": "Read uncommitted" },
+        { "value": "SERIALIZABLE", "label": "Serializable" }
+      ],
+      "level": "advanced"
+    },
+    {
+      "key": "config_dir",
+      "label": "Config folder",
+      "description": "Host folder of .cnf files, mounted read-only at /etc/mysql/conf.d. MariaDB reads them after its own files, so they win. Leave blank to skip. Deploy fails if the folder does not exist.",
+      "type": "path",
+      "level": "advanced"
+    },
+    {
+      "key": "init_scripts_dir",
+      "label": "Init scripts folder",
+      "description": "Host folder of .sql, .sql.gz, .sql.xz, .sql.zst, and .sh files, mounted read-only at /docker-entrypoint-initdb.d. They run in name order when the database is first created and never again. Leave blank to skip.",
+      "type": "path",
+      "level": "advanced"
+    },
+    {
+      "key": "timezone",
+      "label": "Timezone",
+      "description": "IANA name for the server's clock, UTC when blank. NOW() and the values read back out of TIMESTAMP columns follow it.",
+      "type": "text",
+      "placeholder": "America/New_York",
+      "level": "advanced"
+    }
+  ],
+  "containers": [
+    {
+      "image": "mariadb:12.3",
+      "command": [
+        "mariadbd",
+        ["--innodb-buffer-pool-size", "{{buffer_pool_size}}M"],
+        ["--max-connections", "{{max_connections}}"],
+        ["--transaction-isolation", "{{transaction_isolation}}"]
+      ],
+      "healthcheck": {
+        "test": ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"],
+        "interval": 10,
+        "timeout": 5,
+        "retries": 3,
+        "start_period": 60
+      },
+      "environment": {
+        "MARIADB_ROOT_PASSWORD": "{{root_password}}",
+        "MARIADB_DATABASE": "{{initial_database}}",
+        "MARIADB_USER": "{{app_user}}",
+        "MARIADB_PASSWORD": "{{app_password}}",
+        "MARIADB_ROOT_HOST": "{{root_host}}",
+        "MARIADB_AUTO_UPGRADE": "{{auto_upgrade}}",
+        "TZ": "{{timezone}}"
+      },
+      "ports": [{ "container": 3306, "host": "{{host_port}}" }],
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "{{data_dir}}",
+          "target": "/var/lib/mysql"
+        },
+        {
+          "type": "bind",
+          "source": "{{config_dir}}",
+          "target": "/etc/mysql/conf.d",
+          "read_only": true,
+          "create_host_path": false
+        },
+        {
+          "type": "bind",
+          "source": "{{init_scripts_dir}}",
+          "target": "/docker-entrypoint-initdb.d",
+          "read_only": true,
+          "create_host_path": false
+        }
+      ],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}

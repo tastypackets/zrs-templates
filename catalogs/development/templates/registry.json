@@ -1,0 +1,148 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "registry",
+  "version": 1,
+  "name": "Distribution Registry",
+  "description": "Private registry for container images.",
+  "about": "An implementation of the OCI Distribution Specification for storing and distributing container images. It starts with no authentication, so anyone who can reach the port can push and pull. Container engines also reject a plain HTTP registry until it is listed as an insecure one on every client, so most setups either point the TLS fields at a certificate or put a reverse proxy in front.",
+  "upstream": "https://distribution.github.io/distribution/",
+  "categories": ["development"],
+  "variables": [
+    {
+      "key": "data_dir",
+      "label": "Data folder",
+      "description": "Where pushed images are stored on the host. The registry runs as root, so the files are owned by root.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}"
+    },
+    {
+      "key": "host_port",
+      "label": "Host port",
+      "description": "The port clients push and pull on. It becomes part of the image names they use, as in myhost:5000/myimage.",
+      "type": "port",
+      "required": true,
+      "default": 5000
+    },
+    {
+      "key": "log_level",
+      "label": "Log level",
+      "description": "The image ships debug logging. Info is quieter.",
+      "type": "select",
+      "default": "info",
+      "options": [
+        { "value": "error", "label": "Error" },
+        { "value": "warn", "label": "Warn" },
+        { "value": "info", "label": "Info" },
+        { "value": "debug", "label": "Debug" }
+      ],
+      "level": "advanced"
+    },
+    {
+      "key": "http_secret",
+      "label": "HTTP secret",
+      "description": "Signs the upload state the registry hands back to clients. Left blank, a new one is generated at every start, which breaks uploads that were in flight across a restart.",
+      "type": "secret",
+      "length": 48,
+      "level": "advanced"
+    },
+    {
+      "key": "delete_enabled",
+      "label": "Allow deleting images",
+      "description": "Allows deletion by digest, with disk space reclaimed by the garbage-collect command.",
+      "type": "toggle",
+      "default": true,
+      "level": "advanced"
+    },
+    {
+      "key": "read_only",
+      "label": "Read-only",
+      "description": "Serves pulls and rejects pushes. Turn it on before running garbage-collect, then turn it off again.",
+      "type": "toggle",
+      "default": false,
+      "level": "advanced"
+    },
+    {
+      "key": "proxy_remote_url",
+      "label": "Pull-through cache upstream",
+      "description": "Mirror one upstream registry instead of hosting your own images. The URL has to be the root of a domain, and pushes are rejected in this mode. Leave blank for a normal registry.",
+      "type": "text",
+      "placeholder": "https://registry-1.docker.io",
+      "level": "advanced"
+    },
+    {
+      "key": "public_url",
+      "label": "Public URL",
+      "description": "Public registry URL used in upload links, including when behind a reverse proxy.",
+      "type": "text",
+      "placeholder": "https://registry.example.com",
+      "level": "advanced"
+    },
+    {
+      "key": "metrics_port",
+      "label": "Metrics port",
+      "description": "Publishes the debug server, which serves Prometheus metrics at /metrics and Go profiling endpoints. Keep it off the internet. Leave blank to leave it unpublished.",
+      "type": "port",
+      "level": "advanced"
+    },
+    {
+      "key": "certs_dir",
+      "label": "Certificates folder",
+      "description": "Host folder holding the TLS certificate and key, mounted read-only at /certs. Leave blank to serve plain HTTP. Deploy fails if the folder does not exist.",
+      "type": "path",
+      "level": "advanced"
+    },
+    {
+      "key": "tls_certificate",
+      "label": "TLS certificate path",
+      "description": "Certificate path inside the container under /certs, requires a matching key.",
+      "type": "text",
+      "placeholder": "/certs/tls.crt",
+      "level": "advanced"
+    },
+    {
+      "key": "tls_key",
+      "label": "TLS key path",
+      "description": "Private key path inside the container under /certs, used with the certificate.",
+      "type": "text",
+      "placeholder": "/certs/tls.key",
+      "level": "advanced"
+    }
+  ],
+  "containers": [
+    {
+      "image": "registry:3.1",
+      "environment": {
+        "REGISTRY_LOG_LEVEL": "{{log_level}}",
+        "REGISTRY_HTTP_SECRET": "{{http_secret}}",
+        "REGISTRY_HTTP_HOST": "{{public_url}}",
+        "REGISTRY_HTTP_TLS_CERTIFICATE": "{{tls_certificate}}",
+        "REGISTRY_HTTP_TLS_KEY": "{{tls_key}}",
+        "REGISTRY_STORAGE_DELETE_ENABLED": "{{delete_enabled}}",
+        "REGISTRY_STORAGE_MAINTENANCE_READONLY_ENABLED": "{{read_only}}",
+        "REGISTRY_PROXY_REMOTEURL": "{{proxy_remote_url}}"
+      },
+      "ports": [
+        { "container": 5000, "host": "{{host_port}}" },
+        { "container": 5001, "host": "{{metrics_port}}" }
+      ],
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "{{data_dir}}",
+          "target": "/var/lib/registry"
+        },
+        {
+          "type": "bind",
+          "source": "{{certs_dir}}",
+          "target": "/certs",
+          "read_only": true,
+          "create_host_path": false
+        }
+      ],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}

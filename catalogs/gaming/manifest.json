@@ -1,0 +1,17 @@
+{
+  "source": {
+    "format_version": 1,
+    "kind": "template-source",
+    "id": "zrs-gaming",
+    "name": "ZRS Gaming",
+    "description": "Gaming servers and voice chat.",
+    "maintainer": "ZRS",
+    "homepage": "https://github.com/tastypackets/zrs-templates"
+  },
+  "templates": [
+    {
+      "file": "templates/mumble.json"
+    }
+  ],
+  "packs": []
+}

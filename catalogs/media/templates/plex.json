@@ -1,0 +1,131 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "plex",
+  "version": 1,
+  "name": "Plex Media Server",
+  "description": "Streams your movie, TV, music, and photo library to the Plex apps.",
+  "about": "Indexes your media, fetches artwork and metadata, and streams it to the Plex apps on phones, TVs, and consoles. Sign the server in with a claim token on the first start. Plex only offers its setup pages to localhost, and bridge networking makes traffic from the host arrive from the Docker gateway instead, so an unclaimed server needs an allowed network before you can set it up. DLNA and GDM discovery need broadcast traffic that bridge networking does not carry, so clients reach this server through your Plex account rather than by finding it.",
+  "upstream": "https://github.com/plexinc/pms-docker",
+  "categories": ["media"],
+  "variables": [
+    {
+      "key": "config_dir",
+      "label": "Config folder",
+      "description": "Plex's database, metadata, and settings. Use local storage with file locking. Network shares can cause database corruption.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}/config"
+    },
+    {
+      "key": "media_dir",
+      "label": "Media folder",
+      "description": "Media mounted read-only at /data. Add libraries from that path. Plex cannot delete media or save optimized versions there.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_appdata}}/media"
+    },
+    {
+      "key": "transcode_dir",
+      "label": "Transcode folder",
+      "description": "Temporary transcoding files on local storage, separate from your media. Allow more free space than the source file size.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}/transcode"
+    },
+    {
+      "key": "web_port",
+      "label": "Server port",
+      "description": "Host port mapped to container port 32400 for the web app and client connections, also used in the advertised URL.",
+      "type": "port",
+      "required": true,
+      "default": 32400
+    },
+    {
+      "key": "claim_token",
+      "label": "Claim token",
+      "description": "Signs the server in to your Plex account on the first start. Get one at plex.tv/claim and deploy right away, it expires within minutes. Ignored once the server has a token. Without one, set an allowed network below to reach the setup pages.",
+      "type": "text",
+      "placeholder": "claim-xxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+      "key": "advertise_url",
+      "label": "Advertised URL",
+      "description": "Additional URL Plex advertises to clients, including this host's address and the server port.",
+      "type": "text",
+      "placeholder": "http://192.168.1.20:32400/"
+    },
+    {
+      "key": "gpu_device",
+      "label": "GPU device for hardware transcoding",
+      "description": "Usually /dev/dri. Hardware transcoding needs Plex Pass and has to be turned on under Settings, Server, Transcoder. Leave blank to disable.",
+      "type": "path",
+      "level": "advanced"
+    },
+    {
+      "key": "plex_uid",
+      "label": "User ID",
+      "description": "Numeric UID for the container's plex user, which needs access to your media. Leave blank to use the image default.",
+      "type": "number",
+      "integer": true,
+      "min": 0,
+      "level": "advanced"
+    },
+    {
+      "key": "plex_gid",
+      "label": "Group ID",
+      "description": "Numeric GID for the container's plex group, or blank to use the image default.",
+      "type": "number",
+      "integer": true,
+      "min": 0,
+      "level": "advanced"
+    },
+    {
+      "key": "timezone",
+      "label": "Timezone",
+      "description": "Container timezone as an IANA name, such as Europe/London.",
+      "type": "text",
+      "placeholder": "America/New_York",
+      "level": "advanced"
+    },
+    {
+      "key": "allowed_networks",
+      "label": "Networks allowed without sign-in",
+      "description": "IP ranges allowed without authentication, such as 192.168.1.0/24. Plex recommends this only for servers not signed in to an account.",
+      "type": "text",
+      "placeholder": "192.168.1.0/24",
+      "level": "advanced"
+    }
+  ],
+  "containers": [
+    {
+      "image": "plexinc/pms-docker:1.43.3.10861-07dfddaeb",
+      "environment": {
+        "PLEX_CLAIM": "{{claim_token}}",
+        "ADVERTISE_IP": "{{advertise_url}}",
+        "PLEX_UID": "{{plex_uid}}",
+        "PLEX_GID": "{{plex_gid}}",
+        "ALLOWED_NETWORKS": "{{allowed_networks}}",
+        "TZ": "{{timezone}}"
+      },
+      "ports": [{ "container": 32400, "host": "{{web_port}}", "protocol": "tcp" }],
+      "mounts": [
+        { "type": "bind", "source": "{{config_dir}}", "target": "/config" },
+        {
+          "type": "bind",
+          "source": "{{media_dir}}",
+          "target": "/data",
+          "read_only": true
+        },
+        {
+          "type": "bind",
+          "source": "{{transcode_dir}}",
+          "target": "/transcode"
+        }
+      ],
+      "devices": [{ "host": "{{gpu_device}}", "container": "/dev/dri" }],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+templates.source.json
+node_modules/
+.DS_Store
+local/

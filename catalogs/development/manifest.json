@@ -1,0 +1,39 @@
+{
+  "source": {
+    "format_version": 1,
+    "kind": "template-source",
+    "id": "zrs-development",
+    "name": "ZRS Development",
+    "description": "Developer tools, databases, and local AI.",
+    "maintainer": "ZRS",
+    "homepage": "https://github.com/tastypackets/zrs-templates"
+  },
+  "templates": [
+    {
+      "file": "templates/gitea.json"
+    },
+    {
+      "file": "templates/mariadb.json"
+    },
+    {
+      "file": "templates/mongodb.json",
+      "note": "The image declares /data/configdb as a volume, which creates an anonymous volume because this template does not mount it. This template uses /data/db. Add a named volume when the format supports one."
+    },
+    {
+      "file": "templates/ollama.json"
+    },
+    {
+      "file": "templates/postgres.json"
+    },
+    {
+      "file": "templates/registry.json"
+    },
+    {
+      "file": "templates/turborepo-remote-cache.json"
+    },
+    {
+      "file": "templates/valkey.json"
+    }
+  ],
+  "packs": []
+}

@@ -1,0 +1,25 @@
+{
+  "source": {
+    "format_version": 1,
+    "kind": "template-source",
+    "id": "zrs-core",
+    "name": "ZRS Core",
+    "description": "Network and home server services.",
+    "maintainer": "ZRS",
+    "homepage": "https://github.com/tastypackets/zrs-templates"
+  },
+  "templates": [
+    {
+      "file": "templates/adguardhome.json"
+    },
+    {
+      "file": "templates/nginx.json"
+    },
+    {
+      "file": "templates/traefik.json",
+      "carried": false,
+      "note": "Excluded until templates can declare shared networks. Traefik needs a network shared with its target containers, selected through --providers.docker.network. Format v1 has no networks field and accepts only a literal network_mode."
+    }
+  ],
+  "packs": []
+}

@@ -1,0 +1,116 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "adguardhome",
+  "version": 1,
+  "name": "AdGuard Home",
+  "description": "Network-wide ad and tracker blocking DNS server.",
+  "about": "Filters DNS queries to block ads and trackers. Configure your router or individual devices to use this server.",
+  "upstream": "https://github.com/AdguardTeam/AdGuardHome",
+  "categories": ["networking", "security"],
+  "variables": [
+    {
+      "key": "conf_dir",
+      "label": "Config folder",
+      "description": "Holds AdGuardHome.yaml, which has every setting, blocklist, client, and the admin account. Losing it drops you back to the setup wizard, so back it up.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}/conf"
+    },
+    {
+      "key": "work_dir",
+      "label": "Data folder",
+      "description": "Downloaded blocklists, the query log, and statistics. Has to be a different folder from the config one.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}/work"
+    },
+    {
+      "key": "dns_port",
+      "label": "DNS port",
+      "description": "DNS queries use TCP and UDP, normally on port 53. If systemd-resolved or another service already uses that port, free it or choose a port your clients support.",
+      "type": "port",
+      "required": true,
+      "default": 53
+    },
+    {
+      "key": "web_port",
+      "label": "Dashboard port",
+      "description": "Host port for the dashboard and setup wizard. Keep the wizard on all interfaces and container port 3000. If access is lost, stop the container and correct http.address in AdGuardHome.yaml.",
+      "type": "port",
+      "required": true,
+      "default": 3080
+    },
+    {
+      "key": "encrypted_dns",
+      "label": "Publish DNS-over-TLS and DNS-over-QUIC",
+      "description": "Opens host port 853 so clients can query over an encrypted connection. Nothing answers there until you add a certificate under Settings, Encryption.",
+      "type": "toggle",
+      "true_value": "853",
+      "false_value": null,
+      "default": false
+    },
+    {
+      "key": "dns_over_https",
+      "label": "Publish HTTPS and DNS-over-HTTPS",
+      "description": "Opens host port 443 for the HTTPS dashboard and DNS-over-HTTPS. Nothing answers there until you add a certificate under Settings, Encryption. The UDP half only carries traffic once you also turn on HTTP/3.",
+      "type": "toggle",
+      "true_value": "443",
+      "false_value": null,
+      "default": false,
+      "level": "advanced"
+    },
+    {
+      "key": "dnscrypt",
+      "label": "Publish DNSCrypt",
+      "description": "Opens host port 5443 for DNSCrypt clients. There is no dashboard page for it. Nothing answers there until you set port_dnscrypt and dnscrypt_config_file in the tls section of AdGuardHome.yaml.",
+      "type": "toggle",
+      "true_value": "5443",
+      "false_value": null,
+      "default": false,
+      "level": "advanced"
+    },
+    {
+      "key": "timezone",
+      "label": "Timezone",
+      "description": "IANA name such as Europe/London. Sets the timestamps in the container's log output. The query log renders in your browser's timezone regardless.",
+      "type": "text",
+      "placeholder": "America/New_York",
+      "level": "advanced"
+    }
+  ],
+  "containers": [
+    {
+      "image": "adguard/adguardhome:latest",
+      "environment": {
+        "ADGUARD_HOME_DEFAULT_WEB_PORT": "3000",
+        "TZ": "{{timezone}}"
+      },
+      "ports": [
+        { "container": 53, "host": "{{dns_port}}", "protocol": "tcp" },
+        { "container": 53, "host": "{{dns_port}}", "protocol": "udp" },
+        { "container": 3000, "host": "{{web_port}}", "protocol": "tcp" },
+        { "container": 853, "host": "{{encrypted_dns}}", "protocol": "tcp" },
+        { "container": 853, "host": "{{encrypted_dns}}", "protocol": "udp" },
+        { "container": 443, "host": "{{dns_over_https}}", "protocol": "tcp" },
+        { "container": 443, "host": "{{dns_over_https}}", "protocol": "udp" },
+        { "container": 5443, "host": "{{dnscrypt}}", "protocol": "tcp" },
+        { "container": 5443, "host": "{{dnscrypt}}", "protocol": "udp" }
+      ],
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "{{conf_dir}}",
+          "target": "/opt/adguardhome/conf"
+        },
+        {
+          "type": "bind",
+          "source": "{{work_dir}}",
+          "target": "/opt/adguardhome/work"
+        }
+      ],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}

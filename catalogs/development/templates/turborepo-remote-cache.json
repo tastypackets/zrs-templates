@@ -1,0 +1,209 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "turborepo-remote-cache",
+  "version": 1,
+  "name": "Turborepo Remote Cache",
+  "description": "Self-hosted Turborepo remote cache.",
+  "about": "Stores Turborepo build artifacts for reuse across developer machines and CI jobs.",
+  "upstream": "https://github.com/ducktors/turborepo-remote-cache",
+  "categories": ["development"],
+  "variables": [
+    {
+      "key": "cache_dir",
+      "label": "Cache folder",
+      "description": "Host folder for cached artifacts, must be writable by UID 1001.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}"
+    },
+    {
+      "key": "access_token",
+      "label": "Access token",
+      "description": "Every machine using this cache sends this token. Copy it before you deploy and set it as TURBO_TOKEN wherever you run turbo.",
+      "type": "secret",
+      "length": 48,
+      "required": true
+    },
+    {
+      "key": "host_port",
+      "label": "Host port",
+      "description": "Host port used in the TURBO_API URL.",
+      "type": "port",
+      "required": true,
+      "default": 3000
+    },
+    {
+      "key": "signature_key",
+      "label": "Artifact signing key",
+      "description": "Shared artifact signing key, must also be configured in Turborepo clients with signing enabled.",
+      "type": "password",
+      "level": "advanced"
+    },
+    {
+      "key": "max_artifact_size",
+      "label": "Largest artifact",
+      "description": "Maximum accepted upload size in bytes.",
+      "type": "number",
+      "integer": true,
+      "min": 1,
+      "default": 104857600,
+      "level": "advanced"
+    },
+    {
+      "key": "read_only",
+      "label": "Read-only",
+      "description": "Serves cached artifacts but rejects uploads and cleanup requests.",
+      "type": "toggle",
+      "default": false,
+      "level": "advanced"
+    },
+    {
+      "key": "log_level",
+      "label": "Log level",
+      "type": "select",
+      "default": "info",
+      "options": [
+        { "value": "trace", "label": "Trace" },
+        { "value": "debug", "label": "Debug" },
+        { "value": "info", "label": "Info" },
+        { "value": "warn", "label": "Warn" },
+        { "value": "error", "label": "Error" },
+        { "value": "fatal", "label": "Fatal" }
+      ],
+      "level": "advanced"
+    },
+    {
+      "key": "enable_status_log",
+      "label": "Log status checks",
+      "description": "Logs requests to the status endpoint.",
+      "type": "toggle",
+      "default": true,
+      "level": "advanced"
+    },
+    {
+      "key": "auth_mode",
+      "label": "Authentication",
+      "description": "Static checks the access token, JWT checks signed tokens, and None permits unauthenticated access.",
+      "type": "select",
+      "default": "static",
+      "options": [
+        { "value": "static", "label": "Access token" },
+        { "value": "jwt", "label": "JWT" },
+        { "value": "none", "label": "None" }
+      ],
+      "level": "advanced"
+    },
+    {
+      "key": "jwks_url",
+      "label": "JWKS URL",
+      "description": "JWKS metadata URL for retrieving the public keys used to verify JWTs.",
+      "type": "text",
+      "placeholder": "https://auth.example.com/.well-known/jwks.json",
+      "level": "advanced"
+    },
+    {
+      "key": "jwt_issuer",
+      "label": "JWT issuer",
+      "description": "Matched against the iss field in the JWT. Optional even when using JWT authentication.",
+      "type": "text",
+      "level": "advanced"
+    },
+    {
+      "key": "jwt_audience",
+      "label": "JWT audience",
+      "description": "Matched against the aud field in the JWT. Optional even when using JWT authentication.",
+      "type": "text",
+      "level": "advanced"
+    },
+    {
+      "key": "jwt_read_scopes",
+      "label": "Read scopes",
+      "description": "If set, one of the scopes listed here must be present to read from the cache. Separate several with commas.",
+      "type": "text",
+      "level": "advanced"
+    },
+    {
+      "key": "jwt_write_scopes",
+      "label": "Write scopes",
+      "description": "If set, one of the scopes listed here must be present to write to the cache. Separate several with commas.",
+      "type": "text",
+      "level": "advanced"
+    },
+    {
+      "key": "http2",
+      "label": "HTTP/2",
+      "description": "Switch the server to the HTTP/2 protocol. Plain connections lose HTTP/1.1 support, which breaks turbo talking to the cache directly. Leave off unless a proxy in front speaks HTTP/2.",
+      "type": "toggle",
+      "default": false,
+      "level": "advanced"
+    },
+    {
+      "key": "certs_dir",
+      "label": "Certificates folder",
+      "description": "Host folder holding the TLS key and certificate, mounted read-only at /certs. Leave blank to serve plain HTTP. Deploy fails if the folder does not exist.",
+      "type": "path",
+      "level": "advanced"
+    },
+    {
+      "key": "ssl_key_path",
+      "label": "TLS key path",
+      "description": "Where the private key sits inside the container, so under /certs. HTTPS only turns on when this and the certificate path both point at files that exist.",
+      "type": "text",
+      "placeholder": "/certs/tls.key",
+      "level": "advanced"
+    },
+    {
+      "key": "ssl_cert_path",
+      "label": "TLS certificate path",
+      "description": "Where the certificate sits inside the container. If either file is missing the server quietly starts on plain HTTP.",
+      "type": "text",
+      "placeholder": "/certs/tls.crt",
+      "level": "advanced"
+    }
+  ],
+  "containers": [
+    {
+      "image": "ducktors/turborepo-remote-cache:latest",
+      "user": "1001:1001",
+      "environment": {
+        "STORAGE_PROVIDER": "local",
+        "STORAGE_PATH": "/data",
+        "STORAGE_PATH_USE_TMP_FOLDER": "false",
+        "PORT": "3000",
+        "TURBO_TOKEN": "{{access_token}}",
+        "TURBO_REMOTE_CACHE_SIGNATURE_KEY": "{{signature_key}}",
+        "BODY_LIMIT": "{{max_artifact_size}}",
+        "READ_ONLY": "{{read_only}}",
+        "LOG_LEVEL": "{{log_level}}",
+        "ENABLE_STATUS_LOG": "{{enable_status_log}}",
+        "AUTH_MODE": "{{auth_mode}}",
+        "JWKS_URL": "{{jwks_url}}",
+        "JWT_ISSUER": "{{jwt_issuer}}",
+        "JWT_AUDIENCE": "{{jwt_audience}}",
+        "JWT_READ_SCOPES": "{{jwt_read_scopes}}",
+        "JWT_WRITE_SCOPES": "{{jwt_write_scopes}}",
+        "HTTP2": "{{http2}}",
+        "SSL_KEY_PATH": "{{ssl_key_path}}",
+        "SSL_CERT_PATH": "{{ssl_cert_path}}"
+      },
+      "ports": [{ "container": 3000, "host": "{{host_port}}" }],
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "{{cache_dir}}",
+          "target": "/data"
+        },
+        {
+          "type": "bind",
+          "source": "{{certs_dir}}",
+          "target": "/certs",
+          "read_only": true,
+          "create_host_path": false
+        }
+      ],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}

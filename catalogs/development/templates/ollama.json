@@ -1,0 +1,143 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "ollama",
+  "version": 1,
+  "name": "Ollama",
+  "description": "Local large language model server with an OpenAI-compatible API.",
+  "about": "Runs open-weight language models on your own hardware and serves them over an HTTP API on port 11434, with OpenAI-compatible routes under /v1. The container starts with no models. Pull one with ollama pull from the container console, or from any client pointed at the API.",
+  "upstream": "https://ollama.com",
+  "categories": ["ai"],
+  "variables": [
+    {
+      "key": "data_dir",
+      "label": "Data folder",
+      "description": "Stores downloaded models and Ollama keys.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}"
+    },
+    {
+      "key": "api_port",
+      "label": "API port",
+      "description": "Unauthenticated API port, anyone who can reach it can run or download models.",
+      "type": "port",
+      "required": true,
+      "default": 11434
+    },
+    {
+      "key": "gpu_device",
+      "label": "GPU device",
+      "description": "GPU device path, such as /dev/dri, for Vulkan on supported x86 GPUs. Blank uses the CPU. NVIDIA requires container runtime settings this template cannot configure.",
+      "type": "path",
+      "level": "advanced"
+    },
+    {
+      "key": "keep_alive",
+      "label": "Keep model loaded for",
+      "description": "How long a model stays in memory after its last request, 5 minutes when blank. A duration such as 30m, or seconds. Use -1 to keep it loaded, or 0 to drop it as soon as a response finishes.",
+      "type": "text",
+      "placeholder": "5m",
+      "level": "advanced"
+    },
+    {
+      "key": "context_length",
+      "label": "Context length",
+      "description": "Tokens of context a model gets unless the request asks for something else. Blank lets Ollama pick from the VRAM it finds. Memory use grows with this number.",
+      "type": "number",
+      "integer": true,
+      "min": 1,
+      "level": "advanced"
+    },
+    {
+      "key": "num_parallel",
+      "label": "Parallel requests",
+      "description": "Concurrent requests per model, 1 when blank, each requiring its own context memory.",
+      "type": "number",
+      "integer": true,
+      "min": 1,
+      "level": "advanced"
+    },
+    {
+      "key": "max_loaded_models",
+      "label": "Models loaded at once",
+      "description": "How many models stay in memory together, as long as they fit. Blank means 3 per GPU, or 3 on the CPU. Requests for a model that will not fit wait until an idle one is unloaded.",
+      "type": "number",
+      "integer": true,
+      "min": 1,
+      "level": "advanced"
+    },
+    {
+      "key": "flash_attention",
+      "label": "Flash attention",
+      "description": "Reduces memory use for long contexts, leave blank for the backend default.",
+      "type": "select",
+      "options": [
+        { "value": "1", "label": "On" },
+        { "value": "0", "label": "Off" }
+      ],
+      "level": "advanced"
+    },
+    {
+      "key": "kv_cache_type",
+      "label": "K/V cache quantization",
+      "description": "Shrinks the context cache, and only takes effect with flash attention on. Blank is f16. q8_0 uses about half the memory, q4_0 about a quarter, with more quality lost the smaller it gets.",
+      "type": "select",
+      "options": [
+        { "value": "f16", "label": "f16" },
+        { "value": "q8_0", "label": "q8_0" },
+        { "value": "q4_0", "label": "q4_0" }
+      ],
+      "level": "advanced"
+    },
+    {
+      "key": "origins",
+      "label": "Allowed browser origins",
+      "description": "Comma separated origins a browser may call the API from. localhost, 127.0.0.1, and 0.0.0.0 are always allowed. Extensions need their own scheme, such as chrome-extension://*.",
+      "type": "text",
+      "placeholder": "https://chat.example.com",
+      "level": "advanced"
+    },
+    {
+      "key": "no_cloud",
+      "label": "Local models only",
+      "description": "Turns off Ollama's cloud models and its web search, leaving the models on this host.",
+      "type": "toggle",
+      "true_value": "1",
+      "false_value": null,
+      "default": false,
+      "level": "advanced"
+    },
+    {
+      "key": "debug",
+      "label": "Debug logging",
+      "description": "Writes debug messages, including GPU detection, to the container log.",
+      "type": "toggle",
+      "true_value": "1",
+      "false_value": null,
+      "default": false,
+      "level": "advanced"
+    }
+  ],
+  "containers": [
+    {
+      "image": "ollama/ollama:0.32.6",
+      "environment": {
+        "OLLAMA_KEEP_ALIVE": "{{keep_alive}}",
+        "OLLAMA_CONTEXT_LENGTH": "{{context_length}}",
+        "OLLAMA_NUM_PARALLEL": "{{num_parallel}}",
+        "OLLAMA_MAX_LOADED_MODELS": "{{max_loaded_models}}",
+        "OLLAMA_FLASH_ATTENTION": "{{flash_attention}}",
+        "OLLAMA_KV_CACHE_TYPE": "{{kv_cache_type}}",
+        "OLLAMA_ORIGINS": "{{origins}}",
+        "OLLAMA_NO_CLOUD": "{{no_cloud}}",
+        "OLLAMA_DEBUG": "{{debug}}"
+      },
+      "ports": [{ "container": 11434, "host": "{{api_port}}" }],
+      "mounts": [{ "type": "bind", "source": "{{data_dir}}", "target": "/root/.ollama" }],
+      "devices": [{ "host": "{{gpu_device}}" }],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}

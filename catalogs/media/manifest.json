@@ -1,0 +1,20 @@
+{
+  "source": {
+    "format_version": 1,
+    "kind": "template-source",
+    "id": "zrs-media",
+    "name": "ZRS Media",
+    "description": "Media servers and libraries.",
+    "maintainer": "ZRS",
+    "homepage": "https://github.com/tastypackets/zrs-templates"
+  },
+  "templates": [
+    {
+      "file": "templates/jellyfin.json"
+    },
+    {
+      "file": "templates/plex.json"
+    }
+  ],
+  "packs": []
+}

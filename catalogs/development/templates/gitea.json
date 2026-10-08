@@ -1,0 +1,136 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "gitea",
+  "version": 1,
+  "name": "Gitea",
+  "description": "Self-hosted Git service with a web UI, issues, and pull requests.",
+  "about": "Git hosting with repositories, issues, pull requests, and package registries. Runs the rootless image, so the service runs as an unprivileged user. The first start opens a setup page where you confirm the database, SQLite by default, and create the admin account.",
+  "upstream": "https://about.gitea.com",
+  "categories": ["development"],
+  "variables": [
+    {
+      "key": "data_dir",
+      "label": "Data folder",
+      "description": "Git repositories, the database, and uploads.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}/data"
+    },
+    {
+      "key": "config_dir",
+      "label": "Config folder",
+      "description": "Stores app.ini and the secrets Gitea generates at install.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}/config"
+    },
+    {
+      "key": "web_port",
+      "label": "Web UI port",
+      "description": "The web UI port.",
+      "type": "port",
+      "required": true,
+      "default": 3000
+    },
+    {
+      "key": "ssh_port",
+      "label": "SSH port",
+      "description": "Host port for Git over SSH, unpublished when blank.",
+      "type": "port",
+      "default": 2222
+    },
+    {
+      "key": "domain",
+      "label": "Domain",
+      "description": "IP address or hostname used in clone URLs, localhost when blank.",
+      "type": "text",
+      "placeholder": "192.168.1.20"
+    },
+    {
+      "key": "signups",
+      "label": "Allow self-registration",
+      "description": "Allow visitors to create accounts, otherwise an admin must add them after initial setup.",
+      "type": "toggle",
+      "true_value": "false",
+      "false_value": "true",
+      "default": false
+    },
+    {
+      "key": "base_url",
+      "label": "Base URL",
+      "description": "Public URL used for links and HTTP clones, especially behind a reverse proxy.",
+      "type": "text",
+      "placeholder": "https://git.example.com/",
+      "level": "advanced"
+    },
+    {
+      "key": "require_signin",
+      "label": "Require sign-in to view",
+      "description": "Require sign-in to view pages or use the API.",
+      "type": "toggle",
+      "default": false,
+      "level": "advanced"
+    },
+    {
+      "key": "lfs",
+      "label": "Git LFS",
+      "description": "Serve large files with Git LFS. Objects are stored in the data folder.",
+      "type": "toggle",
+      "default": false,
+      "level": "advanced"
+    },
+    {
+      "key": "timezone",
+      "label": "Timezone",
+      "description": "IANA name used for timestamps in Gitea's log output.",
+      "type": "text",
+      "placeholder": "America/New_York",
+      "level": "advanced"
+    },
+    {
+      "key": "run_as",
+      "label": "Run as user",
+      "description": "Numeric UID:GID, default 1000:1000, with write access to the data and config folders.",
+      "type": "text",
+      "placeholder": "1000:1000",
+      "level": "advanced"
+    }
+  ],
+  "containers": [
+    {
+      "image": "docker.gitea.com/gitea:1.27-rootless",
+      "user": "{{run_as}}",
+      "environment": {
+        "GITEA__server__DOMAIN": "{{domain}}",
+        "GITEA__server__HTTP_PORT": "{{web_port}}",
+        "GITEA__server__SSH_DOMAIN": "{{domain}}",
+        "GITEA__server__ROOT_URL": "{{base_url}}",
+        "GITEA__server__SSH_PORT": "{{ssh_port}}",
+        "GITEA__server__SSH_LISTEN_PORT": "2222",
+        "GITEA__server__LFS_START_SERVER": "{{lfs}}",
+        "GITEA__service__DISABLE_REGISTRATION": "{{signups}}",
+        "GITEA__service__REQUIRE_SIGNIN_VIEW": "{{require_signin}}",
+        "TZ": "{{timezone}}"
+      },
+      "ports": [
+        { "container": "{{web_port}}", "host": "{{web_port}}" },
+        { "container": 2222, "host": "{{ssh_port}}" }
+      ],
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "{{data_dir}}",
+          "target": "/var/lib/gitea"
+        },
+        {
+          "type": "bind",
+          "source": "{{config_dir}}",
+          "target": "/etc/gitea"
+        }
+      ],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}

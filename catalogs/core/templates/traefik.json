@@ -1,0 +1,205 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "traefik",
+  "version": 1,
+  "name": "Traefik",
+  "description": "Reverse proxy that routes incoming traffic to your containers and manages their TLS certificates.",
+  "about": "Routes traffic using labels on your application containers and can request Let's Encrypt certificates. Set hostname or path rules with traefik.http.routers labels. Traefik and the target containers must share a network.",
+  "upstream": "https://traefik.io",
+  "categories": ["networking"],
+  "variables": [
+    {
+      "key": "data_dir",
+      "label": "Data folder",
+      "description": "Holds acme.json, where Traefik keeps the ACME account and the certificates it was issued. Traefik creates the file with 0600 permissions and refuses one restored from a backup with looser ones.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}/data"
+    },
+    {
+      "key": "runtime_socket",
+      "label": "Runtime socket",
+      "description": "Traefik reads containers and their labels through this socket, mounted read-only. Podman's is usually /run/podman/podman.sock.",
+      "type": "path",
+      "required": true,
+      "default": "/var/run/docker.sock"
+    },
+    {
+      "key": "http_port",
+      "label": "HTTP port",
+      "description": "Host port for the web entryPoint, which listens on :80 inside the container. An HTTP-01 challenge only succeeds when port 80 from the internet lands here.",
+      "type": "port",
+      "required": true,
+      "default": 80
+    },
+    {
+      "key": "https_port",
+      "label": "HTTPS port",
+      "description": "Host port for the websecure entryPoint, which listens on :443 inside the container. A TLS-ALPN-01 challenge only succeeds when port 443 from the internet lands here.",
+      "type": "port",
+      "required": true,
+      "default": 443
+    },
+    {
+      "key": "expose_all",
+      "label": "Route to every container",
+      "description": "Routes containers by default unless they have traefik.enable=false. When off, each routed container needs traefik.enable=true.",
+      "type": "toggle",
+      "true_value": "true",
+      "false_value": "false",
+      "default": false
+    },
+    {
+      "key": "acme_email",
+      "label": "Let's Encrypt email",
+      "description": "Turns on automatic certificates for every router on the websecure entryPoint. Leave blank to run without them.",
+      "type": "text",
+      "placeholder": "you@example.com"
+    },
+    {
+      "key": "https_redirect",
+      "label": "Redirect HTTP to HTTPS",
+      "description": "Answers every request on the HTTP port with a permanent redirect to the HTTPS one. Turn it on once certificates are working.",
+      "type": "toggle",
+      "true_value": "websecure",
+      "false_value": null,
+      "default": false
+    },
+    {
+      "key": "dashboard",
+      "label": "Publish the dashboard",
+      "description": "Publishes the dashboard and read-only API on port 8080 without authentication, exposing routing configuration to anyone who can reach it.",
+      "type": "toggle",
+      "true_value": "8080",
+      "false_value": null,
+      "default": true
+    },
+    {
+      "key": "dynamic_dir",
+      "label": "Routing config folder",
+      "description": "Mounted read-only at /etc/traefik/dynamic and watched for changes. Drop .yml, .yaml, or .toml files here to route to hosts outside the runtime, or to define middlewares. An empty folder is fine.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}/dynamic",
+      "level": "advanced"
+    },
+    {
+      "key": "acme_challenge",
+      "label": "Certificate challenge",
+      "description": "How Let's Encrypt checks that you control the domain. Either way, that port has to reach this host from the internet. Ignored while the email is blank.",
+      "type": "select",
+      "default": "tlschallenge=true",
+      "options": [
+        { "value": "tlschallenge=true", "label": "TLS-ALPN-01, over port 443" },
+        { "value": "httpchallenge.entrypoint=web", "label": "HTTP-01, over port 80" }
+      ],
+      "level": "advanced"
+    },
+    {
+      "key": "acme_server",
+      "label": "Let's Encrypt server",
+      "description": "Staging issues untrusted certificates against far higher rate limits. Use it while you are getting the setup right.",
+      "type": "select",
+      "default": "https://acme-v02.api.letsencrypt.org/directory",
+      "options": [
+        {
+          "value": "https://acme-v02.api.letsencrypt.org/directory",
+          "label": "Production"
+        },
+        {
+          "value": "https://acme-staging-v02.api.letsencrypt.org/directory",
+          "label": "Staging"
+        }
+      ],
+      "level": "advanced"
+    },
+    {
+      "key": "log_level",
+      "label": "Log level",
+      "description": "Blank leaves Traefik at ERROR, so a working proxy prints almost nothing. Raise it when a route is not showing up.",
+      "type": "select",
+      "options": [
+        { "value": "ERROR", "label": "Error" },
+        { "value": "WARN", "label": "Warning" },
+        { "value": "INFO", "label": "Info" },
+        { "value": "DEBUG", "label": "Debug" }
+      ],
+      "level": "advanced"
+    },
+    {
+      "key": "access_log",
+      "label": "Access log",
+      "description": "Writes one line per proxied request to the container log, in the common log format.",
+      "type": "toggle",
+      "true_value": "true",
+      "false_value": null,
+      "default": false,
+      "level": "advanced"
+    },
+    {
+      "key": "timezone",
+      "label": "Timezone",
+      "description": "IANA name used for timestamps in Traefik's log output.",
+      "type": "text",
+      "placeholder": "America/New_York",
+      "level": "advanced"
+    }
+  ],
+  "containers": [
+    {
+      "image": "traefik:v3.7",
+      "command": [
+        "--entrypoints.web.address=:80",
+        "--entrypoints.websecure.address=:443",
+        "--providers.docker=true",
+        "--providers.file.directory=/etc/traefik/dynamic",
+        ["--providers.docker.exposedbydefault={{expose_all}}"],
+        [
+          "--entrypoints.web.http.redirections.entrypoint.to={{https_redirect}}",
+          "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+        ],
+        [
+          "--api.insecure=true",
+          "--api.dashboard=true",
+          "--entrypoints.traefik.address=:{{dashboard}}"
+        ],
+        [
+          "--certificatesresolvers.letsencrypt.acme.email={{acme_email}}",
+          "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json",
+          "--certificatesresolvers.letsencrypt.acme.caserver={{acme_server}}",
+          "--certificatesresolvers.letsencrypt.acme.{{acme_challenge}}",
+          "--entrypoints.websecure.http.tls.certresolver=letsencrypt"
+        ],
+        ["--log.level={{log_level}}"],
+        ["--accesslog={{access_log}}"]
+      ],
+      "environment": {
+        "TZ": "{{timezone}}"
+      },
+      "ports": [
+        { "container": 80, "host": "{{http_port}}" },
+        { "container": 443, "host": "{{https_port}}" },
+        { "container": 8080, "host": "{{dashboard}}" }
+      ],
+      "mounts": [
+        { "type": "bind", "source": "{{data_dir}}", "target": "/data" },
+        {
+          "type": "bind",
+          "source": "{{dynamic_dir}}",
+          "target": "/etc/traefik/dynamic",
+          "read_only": true
+        },
+        {
+          "type": "bind",
+          "source": "{{runtime_socket}}",
+          "target": "/var/run/docker.sock",
+          "read_only": true,
+          "create_host_path": false
+        }
+      ],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}

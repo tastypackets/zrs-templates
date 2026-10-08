@@ -1,0 +1,39 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  action-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: bash scripts/test-action.sh
+      - run: bash scripts/test-catalog-publish.sh
+
+  validate:
+    strategy:
+      matrix:
+        catalog: [core, media, development, gaming]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build and validate the catalog
+        uses: ./
+        with:
+          working-directory: catalogs/${{ matrix.catalog }}
+
+      - name: Lint individual documents
+        uses: ./
+        with:
+          working-directory: catalogs/${{ matrix.catalog }}
+          files: |
+            templates/**/*.json
+            packs/**/*.json
+            **/*.source.json

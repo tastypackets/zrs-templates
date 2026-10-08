@@ -1,0 +1,59 @@
+name: ZRS templates
+description: Build and validate ZRS template catalogs.
+author: ZRS
+branding:
+  icon: check-square
+  color: blue
+
+inputs:
+  version:
+    description: Current v1 CLI or an exact release ID, limited to the three retained releases.
+    required: false
+    default: v1
+  manifest:
+    description: Catalog manifest path, defaulting to manifest.json in the working directory.
+    required: false
+  output:
+    description: Catalog output path, defaulting to templates.source.json in the working directory.
+    required: false
+  lint-only:
+    description: Validate without writing a catalog.
+    required: false
+    default: "false"
+  files:
+    description: File globs to lint instead of a manifest, one per line.
+    required: false
+  working-directory:
+    description: Directory containing the catalog or files to validate.
+    required: false
+    default: .
+  strict:
+    description: Fail on warnings whose codes are not in allow.
+    required: false
+    default: "true"
+  allow:
+    description: Warning codes allowed in strict mode, comma separated.
+    required: false
+    default: unpinned_image
+
+outputs:
+  release:
+    description: Resolved CLI release ID.
+    value: ${{ steps.run.outputs.release }}
+
+runs:
+  using: composite
+  steps:
+    - id: run
+      shell: bash
+      env:
+        ZRS_ACTION_PATH: ${{ github.action_path }}
+        ZRS_CLI_VERSION: ${{ inputs.version }}
+        ZRS_MANIFEST: ${{ inputs.manifest }}
+        ZRS_OUTPUT: ${{ inputs.output }}
+        ZRS_LINT_ONLY: ${{ inputs.lint-only }}
+        ZRS_FILES: ${{ inputs.files }}
+        ZRS_WORKING_DIRECTORY: ${{ inputs.working-directory }}
+        ZRS_STRICT: ${{ inputs.strict }}
+        ZRS_ALLOW: ${{ inputs.allow }}
+      run: bash "$ZRS_ACTION_PATH/scripts/run-action.sh"

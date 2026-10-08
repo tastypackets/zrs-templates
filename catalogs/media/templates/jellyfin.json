@@ -1,0 +1,104 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "jellyfin",
+  "version": 1,
+  "name": "Jellyfin",
+  "description": "Media server for your own movies, shows, and music.",
+  "about": "Organizes your movies, shows, music, and photos and streams them to browsers, phones, TVs, and set top boxes. The first start opens a setup wizard where you create the admin account and add your libraries. Apps will not find this server by themselves, because the discovery broadcast does not cross a container network. Give them the server's address instead.",
+  "upstream": "https://jellyfin.org",
+  "categories": ["media"],
+  "variables": [
+    {
+      "key": "media_dir",
+      "label": "Media folder",
+      "description": "Media folder mounted at /media, the path to select when adding libraries.",
+      "type": "path",
+      "required": true
+    },
+    {
+      "key": "config_dir",
+      "label": "Config folder",
+      "description": "The database, downloaded metadata images, plugins, and logs. This is the folder to back up.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}/config"
+    },
+    {
+      "key": "cache_dir",
+      "label": "Cache folder",
+      "description": "Temporary transcoding files and cached images. Use a different folder from the config folder or startup fails.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}/cache"
+    },
+    {
+      "key": "web_port",
+      "label": "Web UI port",
+      "description": "Host port for the web UI and client API.",
+      "type": "port",
+      "required": true,
+      "default": 8096
+    },
+    {
+      "key": "published_server_url",
+      "label": "Published server URL",
+      "description": "URL reported in UDP discovery responses. This template does not publish the discovery port, so enter the server address in your clients.",
+      "type": "text",
+      "placeholder": "http://192.168.1.20:8096",
+      "level": "advanced"
+    },
+    {
+      "key": "https_port",
+      "label": "HTTPS port",
+      "description": "Publishes 8920, the container's HTTPS port. Nothing answers there until you add a certificate under Dashboard, Networking. Blank publishes nothing.",
+      "type": "port",
+      "level": "advanced"
+    },
+    {
+      "key": "gpu_device",
+      "label": "GPU device",
+      "description": "Host device passed through for VAAPI or QSV transcoding, usually /dev/dri. Blank leaves transcoding on the CPU. NVIDIA needs the container toolkit runtime, which a template cannot set.",
+      "type": "path",
+      "level": "advanced"
+    },
+    {
+      "key": "run_as",
+      "label": "Run as user",
+      "description": "Numeric uid:gid. Blank runs the server as root, which is what the image does. It needs read access to the media folder, and a gid that can read the GPU device if you passed one through.",
+      "type": "text",
+      "placeholder": "1000:1000",
+      "level": "advanced"
+    },
+    {
+      "key": "timezone",
+      "label": "Timezone",
+      "description": "IANA name such as Europe/London. Sets the container's local time, which log timestamps and daily scheduled tasks use.",
+      "type": "text",
+      "placeholder": "America/New_York",
+      "level": "advanced"
+    }
+  ],
+  "containers": [
+    {
+      "image": "jellyfin/jellyfin:10.11",
+      "user": "{{run_as}}",
+      "environment": {
+        "JELLYFIN_PublishedServerUrl": "{{published_server_url}}",
+        "TZ": "{{timezone}}"
+      },
+      "ports": [
+        { "container": 8096, "host": "{{web_port}}", "protocol": "tcp" },
+        { "container": 8920, "host": "{{https_port}}", "protocol": "tcp" }
+      ],
+      "mounts": [
+        { "type": "bind", "source": "{{media_dir}}", "target": "/media" },
+        { "type": "bind", "source": "{{config_dir}}", "target": "/config" },
+        { "type": "bind", "source": "{{cache_dir}}", "target": "/cache" }
+      ],
+      "devices": [{ "host": "{{gpu_device}}" }],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}

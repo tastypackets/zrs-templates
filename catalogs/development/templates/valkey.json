@@ -1,0 +1,162 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "valkey",
+  "version": 1,
+  "name": "Valkey",
+  "description": "In-memory data store and cache.",
+  "about": "In-memory key-value store for caching and queues, compatible with Redis OSS 7.2 clients.",
+  "upstream": "https://valkey.io",
+  "categories": ["development"],
+  "variables": [
+    {
+      "key": "data_dir",
+      "label": "Data folder",
+      "description": "Holds dump.rdb and the append-only log. Valkey chowns everything inside it to its own user on every start, so point this at a folder of its own.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}"
+    },
+    {
+      "key": "valkey_password",
+      "label": "Password",
+      "description": "Clients send this with AUTH before they can run commands. It is passed on the command line, so anyone who can inspect the container can read it. Clear it to run without a password, open to anything that can reach the port.",
+      "type": "secret"
+    },
+    {
+      "key": "host_port",
+      "label": "Host port",
+      "description": "Publish Valkey on this port. Leave blank to publish nothing. Containers on the same network reach it either way.",
+      "type": "port"
+    },
+    {
+      "key": "append_only",
+      "label": "Append-only log",
+      "description": "Logs writes for recovery after a crash. Enabling this on an existing database requires a live AOF migration before redeploying to avoid data loss.",
+      "type": "toggle",
+      "true_value": "yes",
+      "false_value": null,
+      "default": false,
+      "level": "advanced"
+    },
+    {
+      "key": "append_fsync",
+      "label": "Append-only log flush",
+      "description": "Controls disk flushes for the append-only log, every second when blank, with a speed and durability tradeoff.",
+      "type": "select",
+      "options": [
+        { "value": "everysec", "label": "Every second" },
+        { "value": "always", "label": "After every write" },
+        { "value": "no", "label": "Let the OS decide" }
+      ],
+      "level": "advanced"
+    },
+    {
+      "key": "snapshots",
+      "label": "Snapshot schedule",
+      "description": "Snapshot intervals and write thresholds, blank keeps the default schedule. Never disables scheduled snapshots, not the append-only log.",
+      "type": "select",
+      "options": [
+        {
+          "value": "3600 1 300 100 60 10000",
+          "label": "Every hour, 5 minutes after 100 writes, 1 minute after 10000"
+        },
+        { "value": "900 1", "label": "Every 15 minutes if anything changed" },
+        { "value": "60 1", "label": "Every minute if anything changed" },
+        { "value": "''", "label": "Never" }
+      ],
+      "level": "advanced"
+    },
+    {
+      "key": "max_memory",
+      "label": "Memory limit (MiB)",
+      "description": "Largest amount of memory Valkey uses for data. Blank means no limit. Replica output buffers and the append-only buffer are not counted here, so leave room under any container memory limit.",
+      "type": "number",
+      "integer": true,
+      "min": 1,
+      "level": "advanced"
+    },
+    {
+      "key": "max_memory_policy",
+      "label": "When memory runs out",
+      "description": "Blank and noeviction reject new writes and keep everything. The allkeys options drop keys to make room. The volatile options only drop keys that carry an expiry, and behave like noeviction when none do.",
+      "type": "select",
+      "options": [
+        { "value": "noeviction", "label": "Reject writes (noeviction)" },
+        { "value": "allkeys-lru", "label": "Drop least recently used" },
+        { "value": "allkeys-lfu", "label": "Drop least frequently used" },
+        { "value": "allkeys-random", "label": "Drop at random" },
+        { "value": "volatile-lru", "label": "Expiring keys: least recently used" },
+        { "value": "volatile-lfu", "label": "Expiring keys: least frequently used" },
+        { "value": "volatile-random", "label": "Expiring keys: at random" },
+        { "value": "volatile-ttl", "label": "Expiring keys: shortest time left" }
+      ],
+      "level": "advanced"
+    },
+    {
+      "key": "io_threads",
+      "label": "I/O threads",
+      "description": "Threads that read and write client sockets. Blank or 1 uses the main thread. Raise it only on a host with 3 or more cores, and leave one core spare. On 4 cores try 2 or 3, on 8 cores try 6.",
+      "type": "number",
+      "integer": true,
+      "min": 1,
+      "max": 256,
+      "level": "advanced"
+    },
+    {
+      "key": "databases",
+      "label": "Databases",
+      "description": "Number of logical databases, 16 when blank, selected by clients using a zero-based index.",
+      "type": "number",
+      "integer": true,
+      "min": 1,
+      "max": 256,
+      "level": "advanced"
+    },
+    {
+      "key": "client_timeout",
+      "label": "Idle client timeout (seconds)",
+      "description": "Disconnects idle clients after this many seconds, disabled when blank or 0.",
+      "type": "number",
+      "integer": true,
+      "min": 0,
+      "level": "advanced"
+    },
+    {
+      "key": "log_level",
+      "label": "Log level",
+      "description": "How much Valkey writes to the container log. Blank and notice are the normal level. Warning keeps only the important messages.",
+      "type": "select",
+      "options": [
+        { "value": "debug", "label": "Debug" },
+        { "value": "verbose", "label": "Verbose" },
+        { "value": "notice", "label": "Notice" },
+        { "value": "warning", "label": "Warning" },
+        { "value": "nothing", "label": "Nothing" }
+      ],
+      "level": "advanced"
+    }
+  ],
+  "containers": [
+    {
+      "image": "valkey/valkey:9.1-trixie",
+      "command": [
+        "valkey-server",
+        ["--requirepass", "{{valkey_password}}"],
+        ["--appendonly", "{{append_only}}"],
+        ["--maxmemory", "{{max_memory}}mb"],
+        ["--maxmemory-policy", "{{max_memory_policy}}"],
+        ["--appendfsync", "{{append_fsync}}"],
+        ["--save", "{{snapshots}}"],
+        ["--io-threads", "{{io_threads}}"],
+        ["--databases", "{{databases}}"],
+        ["--timeout", "{{client_timeout}}"],
+        ["--loglevel", "{{log_level}}"]
+      ],
+      "ports": [{ "container": 6379, "host": "{{host_port}}" }],
+      "mounts": [{ "type": "bind", "source": "{{data_dir}}", "target": "/data" }],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}

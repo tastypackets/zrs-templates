@@ -1,0 +1,126 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "mumble",
+  "version": 1,
+  "name": "Mumble",
+  "description": "Low latency voice chat server for gaming and group calls.",
+  "about": "Voice chat server for the Mumble client. The container builds its config file from the settings on this page every time it starts, so hand edits to that file do not survive a restart. Channels, permissions, and bans are set up from a Mumble client signed in as SuperUser. The server generates its own certificate, so clients ask about an untrusted certificate the first time they connect.",
+  "upstream": "https://mumble.info",
+  "categories": ["gaming", "productivity"],
+  "variables": [
+    {
+      "key": "data_dir",
+      "label": "Data folder",
+      "description": "Holds the SQLite database with channels, registered users, and bans, plus the config file the container writes on each start.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}"
+    },
+    {
+      "key": "server_port",
+      "label": "Server port",
+      "description": "Published on both TCP and UDP. Voice goes over UDP, and a client that cannot get UDP through tunnels it over TCP at higher latency.",
+      "type": "port",
+      "required": true,
+      "default": 64738
+    },
+    {
+      "key": "superuser_password",
+      "label": "SuperUser password",
+      "description": "SuperUser admin password, reapplied on every container start and overwriting changes made elsewhere.",
+      "type": "password",
+      "required": true
+    },
+    {
+      "key": "server_password",
+      "label": "Join password",
+      "description": "Password required to join, or blank for an open server. Wrap values containing commas in double quotes.",
+      "type": "password"
+    },
+    {
+      "key": "server_name",
+      "label": "Server name",
+      "description": "Names the root channel, the entry at the top of the channel tree in every client. Root when blank.",
+      "type": "text",
+      "placeholder": "Basement LAN"
+    },
+    {
+      "key": "welcome_text",
+      "label": "Welcome message",
+      "description": "Welcome message shown on connection, with HTML support such as <br />, or blank for the image default.",
+      "type": "text",
+      "level": "advanced"
+    },
+    {
+      "key": "max_users",
+      "label": "Maximum users",
+      "description": "Maximum simultaneous clients, or 100 when blank.",
+      "type": "number",
+      "integer": true,
+      "min": 1,
+      "level": "advanced"
+    },
+    {
+      "key": "bandwidth",
+      "label": "Maximum bandwidth per user (bits per second)",
+      "description": "Ceiling on the audio bitrate one client may send. 558000 when blank.",
+      "type": "number",
+      "integer": true,
+      "min": 1,
+      "level": "advanced"
+    },
+    {
+      "key": "verbose",
+      "label": "Verbose logging",
+      "description": "Adds the server's debug output to the container log.",
+      "type": "toggle",
+      "true_value": "true",
+      "false_value": null,
+      "default": false,
+      "level": "advanced"
+    },
+    {
+      "key": "puid",
+      "label": "User ID",
+      "description": "Numeric UID for the server and data folder ownership, or 10000 when blank. The container resets ownership on startup unless this is 0.",
+      "type": "number",
+      "integer": true,
+      "min": 0,
+      "level": "advanced"
+    },
+    {
+      "key": "pgid",
+      "label": "Group ID",
+      "description": "Numeric GID for the server and data folder ownership, or 10000 when blank.",
+      "type": "number",
+      "integer": true,
+      "min": 0,
+      "level": "advanced"
+    }
+  ],
+  "containers": [
+    {
+      "image": "mumblevoip/mumble-server:latest",
+      "environment": {
+        "MUMBLE_SUPERUSER_PASSWORD": "{{superuser_password}}",
+        "MUMBLE_CONFIG_PORT": "{{server_port}}",
+        "MUMBLE_CONFIG_SERVER_PASSWORD": "{{server_password}}",
+        "MUMBLE_CONFIG_REGISTER_NAME": "{{server_name}}",
+        "MUMBLE_CONFIG_WELCOME_TEXT": "{{welcome_text}}",
+        "MUMBLE_CONFIG_USERS": "{{max_users}}",
+        "MUMBLE_CONFIG_BANDWIDTH": "{{bandwidth}}",
+        "MUMBLE_VERBOSE": "{{verbose}}",
+        "PUID": "{{puid}}",
+        "PGID": "{{pgid}}"
+      },
+      "ports": [
+        { "container": "{{server_port}}", "host": "{{server_port}}", "protocol": "tcp" },
+        { "container": "{{server_port}}", "host": "{{server_port}}", "protocol": "udp" }
+      ],
+      "mounts": [{ "type": "bind", "source": "{{data_dir}}", "target": "/data" }],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}

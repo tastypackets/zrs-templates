@@ -1,0 +1,128 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "mongodb",
+  "version": 1,
+  "name": "MongoDB",
+  "description": "Document database server.",
+  "about": "MongoDB stores JSON-like documents rather than rows and columns, so a collection needs no fixed schema. MongoDB 5.0 and later need a CPU with AVX support on x86 and ARMv8.2-A on arm64, which rules out some older servers and the Raspberry Pi 4. MongoDB is incompatible with Linux kernels 6.19 through 7.0.13, tracked as SERVER-121912. Kernel 7.0.14 or later resolves this issue.",
+  "upstream": "https://www.mongodb.com",
+  "categories": ["development"],
+  "variables": [
+    {
+      "key": "data_dir",
+      "label": "Data folder",
+      "description": "Where the database files live on the host. MongoDB chowns everything inside it to uid 999 on every start, so point this at a folder of its own.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}"
+    },
+    {
+      "key": "root_username",
+      "label": "Root username",
+      "description": "The administrator account, created in the admin database with the root role when the database is first created.",
+      "type": "text",
+      "required": true,
+      "default": "root"
+    },
+    {
+      "key": "root_password",
+      "label": "Root password",
+      "description": "Sets the root password on first initialization, changing this later does not reset it. Save it before deploying.",
+      "type": "secret",
+      "required": true
+    },
+    {
+      "key": "host_port",
+      "label": "Host port",
+      "description": "Host port for MongoDB, unpublished when blank.",
+      "type": "port"
+    },
+    {
+      "key": "init_scripts_dir",
+      "label": "Init scripts folder",
+      "description": "Host folder of .js and .sh files, mounted read-only at /docker-entrypoint-initdb.d. They run in name order when the database is first created and never again. Leave blank to skip. Deploy fails if the folder does not exist.",
+      "type": "path",
+      "level": "advanced"
+    },
+    {
+      "key": "init_database",
+      "label": "Init scripts database",
+      "description": "The database the .js init scripts run against, test if left blank. MongoDB creates a database the first time something is written to it, so this on its own creates nothing.",
+      "type": "text",
+      "level": "advanced"
+    },
+    {
+      "key": "cache_size",
+      "label": "WiredTiger cache (GiB)",
+      "description": "Memory limit for the WiredTiger cache, which may need adjustment to account for a container memory limit.",
+      "type": "number",
+      "min": 0.256,
+      "max": 10000,
+      "level": "advanced"
+    },
+    {
+      "key": "collection_compressor",
+      "label": "Collection compression",
+      "description": "Compression for collection data, snappy if left blank. Collections that already exist keep the compressor they were created with.",
+      "type": "select",
+      "options": [
+        { "value": "snappy", "label": "Snappy" },
+        { "value": "zstd", "label": "Zstandard" },
+        { "value": "zlib", "label": "Zlib" },
+        { "value": "none", "label": "None" }
+      ],
+      "level": "advanced"
+    },
+    {
+      "key": "quiet_logging",
+      "label": "Quiet logging",
+      "description": "Suppresses routine connection and replication messages.",
+      "type": "toggle",
+      "true_value": "--quiet",
+      "false_value": null,
+      "default": false,
+      "level": "advanced"
+    }
+  ],
+  "containers": [
+    {
+      "image": "mongo:8.0",
+      "command": [
+        "mongod",
+        ["--wiredTigerCacheSizeGB", "{{cache_size}}"],
+        ["--wiredTigerCollectionBlockCompressor", "{{collection_compressor}}"],
+        ["{{quiet_logging}}"]
+      ],
+      "healthcheck": {
+        "test": ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand({ping:1})"],
+        "interval": 10,
+        "timeout": 5,
+        "retries": 3,
+        "start_period": 60
+      },
+      "environment": {
+        "MONGO_INITDB_ROOT_USERNAME": "{{root_username}}",
+        "MONGO_INITDB_ROOT_PASSWORD": "{{root_password}}",
+        "MONGO_INITDB_DATABASE": "{{init_database}}"
+      },
+      "ports": [{ "container": 27017, "host": "{{host_port}}" }],
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "{{data_dir}}",
+          "target": "/data/db"
+        },
+        {
+          "type": "bind",
+          "source": "{{init_scripts_dir}}",
+          "target": "/docker-entrypoint-initdb.d",
+          "read_only": true,
+          "create_host_path": false
+        }
+      ],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}

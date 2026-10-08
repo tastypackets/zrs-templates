@@ -1,0 +1,142 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "postgres",
+  "version": 1,
+  "name": "PostgreSQL",
+  "description": "Relational database server.",
+  "about": "PostgreSQL is an open source object-relational database system that uses and extends the SQL language.",
+  "upstream": "https://www.postgresql.org",
+  "categories": ["development"],
+  "variables": [
+    {
+      "key": "data_dir",
+      "label": "Data folder",
+      "description": "Host folder for database files, owned by UID 70.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}"
+    },
+    {
+      "key": "superuser_password",
+      "label": "Superuser password",
+      "description": "Sets the superuser password on first initialization, changing this later does not reset it. Save it before deploying.",
+      "type": "secret",
+      "required": true
+    },
+    {
+      "key": "superuser_name",
+      "label": "Superuser name",
+      "description": "The superuser account created on the first run.",
+      "type": "text",
+      "default": "postgres"
+    },
+    {
+      "key": "initial_database",
+      "label": "Initial database",
+      "description": "An extra database created on the first run. Leave blank to get one named after the superuser.",
+      "type": "text"
+    },
+    {
+      "key": "host_port",
+      "label": "Host port",
+      "description": "Host port for PostgreSQL, unpublished when blank.",
+      "type": "port"
+    },
+    {
+      "key": "host_auth_method",
+      "label": "Network authentication",
+      "description": "How connections from outside the container authenticate. Written into pg_hba.conf when the database is created and ignored on later starts. Trust lets anyone who can reach the port connect as any user with no password.",
+      "type": "select",
+      "default": "scram-sha-256",
+      "options": [
+        { "value": "scram-sha-256", "label": "Password (SCRAM)" },
+        { "value": "trust", "label": "No password (trust)" }
+      ],
+      "level": "advanced"
+    },
+    {
+      "key": "initdb_args",
+      "label": "initdb arguments",
+      "description": "Space-separated arguments for first initialization, including ICU locale settings.",
+      "type": "text",
+      "placeholder": "--locale-provider=icu --icu-locale=de-DE",
+      "level": "advanced"
+    },
+    {
+      "key": "init_scripts_dir",
+      "label": "Init scripts folder",
+      "description": "Host folder of .sql, .sql.gz, and .sh files, mounted read-only at /docker-entrypoint-initdb.d. They run in name order when the database is first created and never again. Leave blank to skip. Deploy fails if the folder does not exist.",
+      "type": "path",
+      "level": "advanced"
+    },
+    {
+      "key": "shared_buffers",
+      "label": "Shared buffers (MiB)",
+      "description": "Memory for the PostgreSQL page cache, 128 MiB when blank, overriding postgresql.conf.",
+      "type": "number",
+      "integer": true,
+      "min": 1,
+      "level": "advanced"
+    },
+    {
+      "key": "max_connections",
+      "label": "Maximum connections",
+      "description": "Maximum simultaneous connections, 100 when blank, overriding postgresql.conf.",
+      "type": "number",
+      "integer": true,
+      "min": 1,
+      "level": "advanced"
+    },
+    {
+      "key": "shared_memory",
+      "label": "Shared memory (MiB)",
+      "description": "Size of /dev/shm, where parallel queries put their shared memory segments. Containers get 64 MiB. Raise it if a query fails with the could not resize shared memory segment error.",
+      "type": "number",
+      "integer": true,
+      "min": 64,
+      "required": true,
+      "default": 64,
+      "level": "advanced"
+    }
+  ],
+  "containers": [
+    {
+      "image": "postgres:18-alpine",
+      "command": [
+        "postgres",
+        ["-c", "shared_buffers={{shared_buffers}}MB"],
+        ["-c", "max_connections={{max_connections}}"]
+      ],
+      "environment": {
+        "POSTGRES_PASSWORD": "{{superuser_password}}",
+        "POSTGRES_USER": "{{superuser_name}}",
+        "POSTGRES_DB": "{{initial_database}}",
+        "POSTGRES_HOST_AUTH_METHOD": "{{host_auth_method}}",
+        "POSTGRES_INITDB_ARGS": "{{initdb_args}}"
+      },
+      "ports": [{ "container": 5432, "host": "{{host_port}}" }],
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "{{data_dir}}",
+          "target": "/var/lib/postgresql"
+        },
+        {
+          "type": "bind",
+          "source": "{{init_scripts_dir}}",
+          "target": "/docker-entrypoint-initdb.d",
+          "read_only": true,
+          "create_host_path": false
+        },
+        {
+          "type": "tmpfs",
+          "target": "/dev/shm",
+          "size": "{{shared_memory}}"
+        }
+      ],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}
