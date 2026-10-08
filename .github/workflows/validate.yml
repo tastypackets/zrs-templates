@@ -1,4 +1,4 @@
-name: Validate
+name: Templates
 
 on:
   pull_request:
@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   validate:
+    name: Catalog checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
