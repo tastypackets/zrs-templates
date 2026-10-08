@@ -10,6 +10,9 @@
   },
   "templates": [
     {
+      "file": "templates/crates-io-proxy.json"
+    },
+    {
       "file": "templates/gitea.json"
     },
     {
