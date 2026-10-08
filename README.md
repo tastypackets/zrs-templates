@@ -30,7 +30,7 @@ Add `--strict --allow=unpinned_image` to use the same warning policy as this rep
 
 ## GitHub Action
 
-Use the Action in your own repository to build a catalog from its `manifest.json`:
+Use the [ZRS templates Action](https://github.com/marketplace/actions/zrs-templates) in your own repository to build a catalog from its `manifest.json`:
 
 ```yaml
 name: Templates
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: tastypackets/zrs-templates@main
+      - uses: tastypackets/zrs-templates@action-v1
 ```
 
 The Action supports Linux x86-64 and ARM64 runners. It writes `templates.source.json` after validation succeeds. Set `lint-only: "true"` to validate without writing, or `working-directory` to select a catalog in a subdirectory. Set `files` to newline-separated glob patterns to lint individual documents without a manifest.
