@@ -15,12 +15,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Test tooling
-        run: |
-          bash scripts/test-action.sh
-          bash scripts/test-catalog-publish.sh
-          bash scripts/test-changed-catalogs.sh
-
       - name: Download CLI
         id: cli
         run: bash scripts/download-cli.sh "$RUNNER_TEMP/zrs-template"

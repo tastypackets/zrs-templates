@@ -1,0 +1,33 @@
+name: Tooling
+
+on:
+  pull_request:
+    paths:
+      - action.yml
+      - 'scripts/**'
+      - '.github/workflows/**'
+  push:
+    branches: [main]
+    paths:
+      - action.yml
+      - 'scripts/**'
+      - '.github/workflows/**'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tooling tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Test Action
+        run: bash scripts/test-action.sh
+
+      - name: Test catalog publishing
+        run: bash scripts/test-catalog-publish.sh
+
+      - name: Test catalog selection
+        run: bash scripts/test-changed-catalogs.sh
