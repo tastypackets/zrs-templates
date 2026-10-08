@@ -1,0 +1,74 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "crates-io-proxy",
+  "version": 1,
+  "name": "crates.io proxy",
+  "description": "Caching proxy for the crates.io registry.",
+  "about": "Caches the crates.io sparse index and crate downloads on Linux x86-64. Each Cargo client needs source replacement configured with sparse+<proxy URL>/index/. Serves HTTP without authentication.",
+  "upstream": "https://github.com/ravenexp/crates-io-proxy",
+  "categories": [
+    "development"
+  ],
+  "variables": [
+    {
+      "key": "cache_dir",
+      "label": "Cache folder",
+      "description": "Folder for cached index entries and crate files, writable by UID 777.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}"
+    },
+    {
+      "key": "host_port",
+      "label": "Host port",
+      "description": "Port for Cargo requests.",
+      "type": "port",
+      "required": true,
+      "default": 3080
+    },
+    {
+      "key": "proxy_url",
+      "label": "Proxy URL",
+      "description": "URL Cargo clients use to reach the proxy, including the host port.",
+      "type": "text",
+      "required": true,
+      "placeholder": "http://server.example.com:3080/"
+    },
+    {
+      "key": "cache_ttl",
+      "label": "Index cache lifetime (seconds)",
+      "description": "Seconds before a cached index entry expires.",
+      "type": "number",
+      "integer": true,
+      "min": 1,
+      "default": 3600,
+      "level": "advanced"
+    }
+  ],
+  "containers": [
+    {
+      "image": "ravenexp/crates-io-proxy:v0.2.4",
+      "user": "777",
+      "environment": {
+        "CRATES_IO_PROXY_URL": "{{proxy_url}}",
+        "CRATES_IO_PROXY_CACHE_TTL": "{{cache_ttl}}"
+      },
+      "ports": [
+        {
+          "container": 3080,
+          "host": "{{host_port}}"
+        }
+      ],
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "{{cache_dir}}",
+          "target": "/var/cache/crates-io-proxy"
+        }
+      ],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}
