@@ -3,7 +3,7 @@ set -euo pipefail
 
 catalog=${1:?catalog required}
 case "$catalog" in
-  core|media|development|gaming) ;;
+  networking|media|development|gaming) ;;
   *) echo 'Unknown catalog' >&2; exit 1 ;;
 esac
 : "${R2_ACCOUNT_ID:?missing R2_ACCOUNT_ID}"

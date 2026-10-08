@@ -16,7 +16,7 @@ jobs:
   publish:
     strategy:
       matrix:
-        catalog: [core, media, development, gaming]
+        catalog: [networking, media, development, gaming]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

@@ -4,7 +4,7 @@ App templates for [ZRS](https://zrs.dev), organized into independent catalogs. E
 
 | Catalog                             | Contents                                 |
 | ----------------------------------- | ---------------------------------------- |
-| [Core](catalogs/core)               | Network and home server services         |
+| [Networking](catalogs/networking)               | Network and home server services         |
 | [Media](catalogs/media)             | Media servers                            |
 | [Development](catalogs/development) | Developer tools, databases, and local AI |
 | [Gaming](catalogs/gaming)           | Gaming servers and voice chat            |
@@ -16,7 +16,7 @@ Each catalog has a `manifest.json` listing its templates. Entries with `carried:
 With `zrs-template` installed, run these commands from a catalog directory:
 
 ```sh
-cd catalogs/core
+cd catalogs/networking
 zrs-template
 ```
 
