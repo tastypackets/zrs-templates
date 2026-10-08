@@ -2,8 +2,8 @@
   "source": {
     "format_version": 1,
     "kind": "template-source",
-    "id": "zrs-core",
-    "name": "ZRS Core",
+    "id": "zrs-networking",
+    "name": "ZRS Networking",
     "description": "Network and home server services.",
     "maintainer": "ZRS",
     "homepage": "https://github.com/tastypackets/zrs-templates"
