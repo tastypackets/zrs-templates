@@ -10,6 +10,9 @@
   },
   "templates": [
     {
+      "file": "templates/enshrouded.json"
+    },
+    {
       "file": "templates/mumble.json"
     }
   ],
