@@ -21,17 +21,37 @@ jobs:
           bash scripts/test-changed-catalogs.sh
 
       - name: Download CLI
+        id: cli
         run: bash scripts/download-cli.sh "$RUNNER_TEMP/zrs-template"
 
-      - name: Build and lint catalogs
+      - name: Validate Networking
+        if: ${{ !cancelled() && steps.cli.outcome == 'success' }}
+        working-directory: catalogs/networking
         run: |
-          for catalog in networking media development gaming; do
-            (
-              cd "catalogs/$catalog"
-              echo "::group::$catalog"
-              "$RUNNER_TEMP/zrs-template" --strict --allow=unpinned_image
-              "$RUNNER_TEMP/zrs-template" --strict --allow=unpinned_image \
-                --patterns=$'templates/**/*.json\npacks/**/*.json\n**/*.source.json'
-              echo '::endgroup::'
-            )
-          done
+          "$RUNNER_TEMP/zrs-template" --strict --allow=unpinned_image
+          "$RUNNER_TEMP/zrs-template" --strict --allow=unpinned_image \
+            --patterns=$'templates/**/*.json\npacks/**/*.json\n**/*.source.json'
+
+      - name: Validate Media
+        if: ${{ !cancelled() && steps.cli.outcome == 'success' }}
+        working-directory: catalogs/media
+        run: |
+          "$RUNNER_TEMP/zrs-template" --strict --allow=unpinned_image
+          "$RUNNER_TEMP/zrs-template" --strict --allow=unpinned_image \
+            --patterns=$'templates/**/*.json\npacks/**/*.json\n**/*.source.json'
+
+      - name: Validate Development
+        if: ${{ !cancelled() && steps.cli.outcome == 'success' }}
+        working-directory: catalogs/development
+        run: |
+          "$RUNNER_TEMP/zrs-template" --strict --allow=unpinned_image
+          "$RUNNER_TEMP/zrs-template" --strict --allow=unpinned_image \
+            --patterns=$'templates/**/*.json\npacks/**/*.json\n**/*.source.json'
+
+      - name: Validate Gaming
+        if: ${{ !cancelled() && steps.cli.outcome == 'success' }}
+        working-directory: catalogs/gaming
+        run: |
+          "$RUNNER_TEMP/zrs-template" --strict --allow=unpinned_image
+          "$RUNNER_TEMP/zrs-template" --strict --allow=unpinned_image \
+            --patterns=$'templates/**/*.json\npacks/**/*.json\n**/*.source.json'
