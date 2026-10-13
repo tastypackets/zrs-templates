@@ -16,6 +16,9 @@
       "file": "templates/nginx.json"
     },
     {
+      "file": "templates/tailscale-host.json"
+    },
+    {
       "file": "templates/tailscale.json"
     },
     {

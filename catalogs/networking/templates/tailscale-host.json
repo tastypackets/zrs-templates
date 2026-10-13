@@ -1,0 +1,62 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "tailscale-host",
+  "version": 1,
+  "name": "Tailscale Host",
+  "description": "Connects the host and its published services to your Tailscale network.",
+  "about": "Access host services through the host's Tailscale IP or MagicDNS name and each service's port. Services must listen on the Tailscale address or all interfaces. Restrict access with tailnet access rules. Tailscale's firewall rules can take precedence over existing host rules. Uses host networking, /dev/net/tun, and NET_ADMIN to manage the host's VPN interface, routes, and firewall rules. Do not run alongside another host Tailscale instance. Remote access stops when Docker stops. This template does not configure an exit node or advertise LAN subnets. Use Tailscale Serve for a single web service with narrower scope.",
+  "upstream": "https://tailscale.com",
+  "categories": ["networking"],
+  "variables": [
+    {
+      "key": "hostname",
+      "label": "Tailnet hostname",
+      "description": "Name for this host in your Tailscale network.",
+      "type": "text",
+      "required": true,
+      "default": "zrs-host"
+    },
+    {
+      "key": "state_dir",
+      "label": "State folder",
+      "description": "Dedicated folder for this node's identity, reusing another node's state can retain its routing settings.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}"
+    },
+    {
+      "key": "auth_key",
+      "label": "Auth key",
+      "description": "Leave blank to follow the browser login link in the container logs within 30 minutes.",
+      "type": "password"
+    }
+  ],
+  "containers": [
+    {
+      "image": "tailscale/tailscale:stable",
+      "environment": {
+        "TS_HOSTNAME": "{{hostname}}",
+        "TS_AUTHKEY": "{{auth_key}}",
+        "TS_STATE_DIR": "/var/lib/tailscale",
+        "TS_USERSPACE": "false",
+        "TS_AUTH_ONCE": "true",
+        "TS_ACCEPT_DNS": "false",
+        "TS_ROUTES": "",
+        "TS_BOOT_TIMEOUT": "30m"
+      },
+      "network_mode": "host",
+      "cap_add": ["NET_ADMIN"],
+      "devices": [{ "host": "/dev/net/tun", "container": "/dev/net/tun" }],
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "{{state_dir}}",
+          "target": "/var/lib/tailscale"
+        }
+      ],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}
