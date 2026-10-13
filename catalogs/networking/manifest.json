@@ -16,6 +16,9 @@
       "file": "templates/nginx.json"
     },
     {
+      "file": "templates/tailscale.json"
+    },
+    {
       "file": "templates/traefik.json",
       "carried": false,
       "note": "Excluded until templates can declare shared networks. Traefik needs a network shared with its target containers, selected through --providers.docker.network. Format v1 has no networks field and accepts only a literal network_mode."

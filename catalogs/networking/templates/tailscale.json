@@ -1,0 +1,74 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "tailscale",
+  "version": 1,
+  "name": "Tailscale Serve",
+  "description": "Shares a web service with devices on your Tailscale network.",
+  "about": "For ZRS, use https+insecure://<host-lan-ip>:9779 unless you changed its port. The https+insecure scheme skips backend certificate verification. For other containers, use the host's LAN address and the app's published port. Loopback addresses refer to this container. Enable MagicDNS and HTTPS certificates in your tailnet. Follow any Serve enablement link in the logs. From a tailnet device, open the HTTPS hostname shown there without the backend port. Use the hostname, not the Tailscale IP. Tailscale Host (planned) will provide whole-host access.",
+  "upstream": "https://tailscale.com",
+  "categories": [
+    "networking"
+  ],
+  "variables": [
+    {
+      "key": "target_url",
+      "label": "Service URL",
+      "description": "Backend HTTP or HTTPS URL including its port, reachable from this container.",
+      "type": "text",
+      "required": true,
+      "placeholder": "https+insecure://192.168.1.10:9779"
+    },
+    {
+      "key": "hostname",
+      "label": "Tailnet hostname",
+      "description": "Name for this proxy in your Tailscale network.",
+      "type": "text",
+      "required": true,
+      "default": "zrs-tailscale"
+    },
+    {
+      "key": "state_dir",
+      "label": "State folder",
+      "description": "Stores the node identity and Serve settings across container recreation.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}"
+    },
+    {
+      "key": "auth_key",
+      "label": "Auth key",
+      "description": "Leave blank to follow the browser login link in the container logs within 30 minutes.",
+      "type": "password"
+    }
+  ],
+  "containers": [
+    {
+      "image": "tailscale/tailscale:stable",
+      "command": [
+        "/bin/sh",
+        "-c",
+        "set -eu\n/usr/local/bin/containerboot &\nboot_pid=$!\ntrap 'kill \"$boot_pid\" 2>/dev/null || true' EXIT\ntrap 'exit 0' TERM INT\nuntil tailscale ip -4 >/dev/null 2>&1; do\n  if ! kill -0 \"$boot_pid\" 2>/dev/null; then\n    wait \"$boot_pid\"\n    exit 1\n  fi\n  sleep 2\ndone\nuntil tailscale serve --bg --yes --https=443 \"$SERVE_TARGET\"; do\n  if ! kill -0 \"$boot_pid\" 2>/dev/null; then\n    wait \"$boot_pid\"\n    exit 1\n  fi\n  sleep 5\ndone\nwait \"$boot_pid\""
+      ],
+      "environment": {
+        "SERVE_TARGET": "{{target_url}}",
+        "TS_HOSTNAME": "{{hostname}}",
+        "TS_AUTHKEY": "{{auth_key}}",
+        "TS_STATE_DIR": "/var/lib/tailscale",
+        "TS_USERSPACE": "true",
+        "TS_AUTH_ONCE": "true",
+        "TS_ACCEPT_DNS": "false",
+        "TS_BOOT_TIMEOUT": "30m"
+      },
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "{{state_dir}}",
+          "target": "/var/lib/tailscale"
+        }
+      ],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}
