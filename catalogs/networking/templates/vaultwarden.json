@@ -1,0 +1,82 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "vaultwarden",
+  "version": 1,
+  "name": "Vaultwarden",
+  "description": "Unofficial password vault server compatible with Bitwarden clients.",
+  "about": "Includes a web vault. This container serves HTTP, so use an HTTPS reverse proxy for browser access beyond localhost. Create your first account in the web vault. Recreate the container after changing these settings. For admin access, use HTTPS and an Argon2 PHC string generated with vaultwarden hash, then log in with the original password. Settings saved through the admin page override these template settings.",
+  "upstream": "https://github.com/dani-garcia/vaultwarden",
+  "categories": ["security"],
+  "variables": [
+    {
+      "key": "data_dir",
+      "label": "Data folder",
+      "description": "Stores the SQLite database, attachments, and server keys at /data.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}"
+    },
+    {
+      "key": "host_port",
+      "label": "HTTP port",
+      "description": "Host HTTP port for your reverse proxy, mapped to container port 80.",
+      "type": "port",
+      "required": true,
+      "default": 8080
+    },
+    {
+      "key": "domain",
+      "label": "Server URL",
+      "description": "Full URL clients use, including https:// and any port or subpath.",
+      "type": "text",
+      "required": true,
+      "placeholder": "https://vault.example.com"
+    },
+    {
+      "key": "signups_allowed",
+      "label": "Allow open registration",
+      "description": "Disable after creating your account to stop registration without an invitation.",
+      "type": "toggle",
+      "required": true,
+      "default": true
+    },
+    {
+      "key": "invitations_allowed",
+      "label": "Allow organization invitations",
+      "description": "Disabling this blocks organization invitations but still permits server admin invitations.",
+      "type": "toggle",
+      "required": true,
+      "default": true,
+      "level": "advanced"
+    },
+    {
+      "key": "admin_token",
+      "label": "Admin token or Argon2 hash",
+      "description": "Optional token or Argon2 PHC hash for /admin, disabled when blank on a new install.",
+      "type": "password",
+      "level": "advanced"
+    }
+  ],
+  "containers": [
+    {
+      "image": "vaultwarden/server:1.37.4",
+      "environment": {
+        "DOMAIN": "{{domain}}",
+        "SIGNUPS_ALLOWED": "{{signups_allowed}}",
+        "INVITATIONS_ALLOWED": "{{invitations_allowed}}",
+        "ADMIN_TOKEN": "{{admin_token}}"
+      },
+      "ports": [{ "container": 80, "host": "{{host_port}}" }],
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "{{data_dir}}",
+          "target": "/data"
+        }
+      ],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}
