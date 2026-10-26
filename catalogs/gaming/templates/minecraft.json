@@ -1,0 +1,287 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "minecraft",
+  "version": 1,
+  "name": "Minecraft",
+  "description": "Minecraft: Java Edition server.",
+  "about": "By default, the container will download the latest version of the vanilla Minecraft: Java Edition server provided by Mojang.",
+  "upstream": "https://github.com/itzg/docker-minecraft-server",
+  "categories": [
+    "gaming"
+  ],
+  "variables": [
+    {
+      "key": "eula",
+      "label": "Accept the Minecraft EULA",
+      "description": "https://account.mojang.com/documents/minecraft_eula",
+      "type": "toggle",
+      "true_value": "TRUE",
+      "false_value": "FALSE",
+      "default": true
+    },
+    {
+      "key": "data_dir",
+      "label": "Data directory",
+      "description": "Everything the container manages is located under the container's /data path.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}"
+    },
+    {
+      "key": "game_port",
+      "label": "Server port",
+      "description": "Server port exposed on your host machine.",
+      "type": "port",
+      "required": true,
+      "default": 25565
+    },
+    {
+      "key": "server_type",
+      "label": "Server type",
+      "type": "select",
+      "required": true,
+      "default": "VANILLA",
+      "options": [
+        {
+          "value": "VANILLA",
+          "label": "Vanilla"
+        },
+        {
+          "value": "PAPER",
+          "label": "Paper"
+        },
+        {
+          "value": "PURPUR",
+          "label": "Purpur"
+        },
+        {
+          "value": "FABRIC",
+          "label": "Fabric"
+        },
+        {
+          "value": "FORGE",
+          "label": "Forge"
+        },
+        {
+          "value": "NEOFORGE",
+          "label": "NeoForge"
+        },
+        {
+          "value": "QUILT",
+          "label": "Quilt"
+        }
+      ]
+    },
+    {
+      "key": "mc_version",
+      "label": "Minecraft version",
+      "description": "LATEST for latest release, or a specific version.",
+      "type": "text",
+      "required": true,
+      "default": "LATEST"
+    },
+    {
+      "key": "memory",
+      "label": "Java heap size (MiB)",
+      "description": "Adjusts both initial (Xms) and max (Xmx) memory heap settings of the JVM.",
+      "type": "number",
+      "integer": true,
+      "min": 1,
+      "required": true,
+      "default": 1024
+    },
+    {
+      "key": "difficulty",
+      "label": "Difficulty",
+      "type": "select",
+      "options": [
+        {
+          "value": "peaceful",
+          "label": "Peaceful"
+        },
+        {
+          "value": "easy",
+          "label": "Easy"
+        },
+        {
+          "value": "normal",
+          "label": "Normal"
+        },
+        {
+          "value": "hard",
+          "label": "Hard"
+        }
+      ]
+    },
+    {
+      "key": "game_mode",
+      "label": "Game mode",
+      "description": "The default game mode.",
+      "type": "select",
+      "options": [
+        {
+          "value": "survival",
+          "label": "Survival"
+        },
+        {
+          "value": "creative",
+          "label": "Creative"
+        },
+        {
+          "value": "adventure",
+          "label": "Adventure"
+        },
+        {
+          "value": "spectator",
+          "label": "Spectator"
+        }
+      ]
+    },
+    {
+      "key": "ops",
+      "label": "Operators",
+      "description": "A list of usernames and/or UUIDs separated by commas.",
+      "type": "text"
+    },
+    {
+      "key": "enable_whitelist",
+      "label": "Whitelist",
+      "type": "toggle",
+      "true_value": "true",
+      "false_value": "false",
+      "default": false
+    },
+    {
+      "key": "whitelist",
+      "label": "Whitelist players",
+      "description": "A list of usernames and/or UUIDs separated by commas.",
+      "type": "text"
+    },
+    {
+      "key": "motd",
+      "label": "Message of the day",
+      "description": "Shown below each server entry in the client UI.",
+      "type": "text",
+      "level": "advanced"
+    },
+    {
+      "key": "max_players",
+      "label": "Maximum players",
+      "type": "number",
+      "integer": true,
+      "min": 1,
+      "level": "advanced"
+    },
+    {
+      "key": "seed",
+      "label": "Level seed",
+      "type": "text",
+      "level": "advanced"
+    },
+    {
+      "key": "level",
+      "label": "World name",
+      "description": "The world name and the world directory path.",
+      "type": "text",
+      "level": "advanced"
+    },
+    {
+      "key": "view_distance",
+      "label": "View distance (chunks)",
+      "description": "The amount of world data the server sends the client, measured in chunks in each direction of the player (radius, not diameter).",
+      "type": "number",
+      "integer": true,
+      "min": 3,
+      "max": 32,
+      "level": "advanced"
+    },
+    {
+      "key": "rcon_host_port",
+      "label": "RCON host port",
+      "description": "Be cautious of mapping the RCON port externally.",
+      "type": "port",
+      "level": "advanced"
+    },
+    {
+      "key": "rcon_password",
+      "label": "RCON password",
+      "type": "secret",
+      "required": true,
+      "level": "advanced"
+    },
+    {
+      "key": "timezone",
+      "label": "Timezone",
+      "description": "Configure the timezone to match yours, such as Europe/London.",
+      "type": "text",
+      "level": "advanced"
+    },
+    {
+      "key": "uid",
+      "label": "User ID",
+      "description": "Run the Minecraft server as user ID 1000 by default.",
+      "type": "number",
+      "integer": true,
+      "min": 0,
+      "level": "advanced"
+    },
+    {
+      "key": "gid",
+      "label": "Group ID",
+      "description": "Run the Minecraft server as group ID 1000 by default.",
+      "type": "number",
+      "integer": true,
+      "min": 0,
+      "level": "advanced"
+    }
+  ],
+  "containers": [
+    {
+      "image": "itzg/minecraft-server:stable",
+      "environment": {
+        "EULA": "{{eula}}",
+        "SERVER_PORT": "25565",
+        "TYPE": "{{server_type}}",
+        "VERSION": "{{mc_version}}",
+        "MEMORY": "{{memory}}M",
+        "MOTD": "{{motd}}",
+        "DIFFICULTY": "{{difficulty}}",
+        "MODE": "{{game_mode}}",
+        "MAX_PLAYERS": "{{max_players}}",
+        "OPS": "{{ops}}",
+        "ENABLE_WHITELIST": "{{enable_whitelist}}",
+        "WHITELIST": "{{whitelist}}",
+        "SEED": "{{seed}}",
+        "LEVEL": "{{level}}",
+        "VIEW_DISTANCE": "{{view_distance}}",
+        "RCON_PASSWORD": "{{rcon_password}}",
+        "TZ": "{{timezone}}",
+        "UID": "{{uid}}",
+        "GID": "{{gid}}"
+      },
+      "ports": [
+        {
+          "container": 25565,
+          "host": "{{game_port}}",
+          "protocol": "tcp"
+        },
+        {
+          "container": 25575,
+          "host": "{{rcon_host_port}}",
+          "protocol": "tcp"
+        }
+      ],
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "{{data_dir}}",
+          "target": "/data"
+        }
+      ],
+      "restart_policy": "unless-stopped",
+      "stop_timeout": 90
+    }
+  ]
+}
