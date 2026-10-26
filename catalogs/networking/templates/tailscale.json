@@ -3,10 +3,10 @@
   "format_version": 1,
   "kind": "container-app",
   "id": "tailscale",
-  "version": 1,
+  "version": 2,
   "name": "Tailscale Serve",
   "description": "Shares a web service with devices on your Tailscale network.",
-  "about": "For ZRS, use https+insecure://<host-lan-ip>:9779 unless you changed its port. The https+insecure scheme skips backend certificate verification. For other containers, use the host's LAN address and the app's published port. Loopback addresses refer to this container. Enable MagicDNS and HTTPS certificates in your tailnet. Follow any Serve enablement link in the logs. From a tailnet device, open the HTTPS hostname shown there without the backend port. Use the hostname, not the Tailscale IP. Tailscale Host (planned) will provide whole-host access.",
+  "about": "For another container, use host.docker.internal and the app's published port. For a host service, use host.docker.internal and the service's port. Use http:// for HTTP, https:// for HTTPS with a valid certificate, or https+insecure:// to skip backend certificate verification. Host services listening only on 127.0.0.1 are unreachable from this container. Follow any Serve enablement link in the logs. From a tailnet device, open the HTTPS hostname shown there without the backend port.",
   "upstream": "https://tailscale.com",
   "categories": [
     "networking"
@@ -15,10 +15,10 @@
     {
       "key": "target_url",
       "label": "Service URL",
-      "description": "Backend HTTP or HTTPS URL including its port, reachable from this container.",
+      "description": "The prefilled URL works for ZRS access, change only the port if ZRS uses a custom port.",
       "type": "text",
       "required": true,
-      "placeholder": "https+insecure://192.168.1.10:9779"
+      "default": "https+insecure://host.docker.internal:9779"
     },
     {
       "key": "hostname",
@@ -61,6 +61,9 @@
         "TS_ACCEPT_DNS": "false",
         "TS_BOOT_TIMEOUT": "30m"
       },
+      "extra_hosts": [
+        "host.docker.internal:host-gateway"
+      ],
       "mounts": [
         {
           "type": "bind",
