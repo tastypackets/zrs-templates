@@ -1,0 +1,50 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "cloudbeaver",
+  "version": 1,
+  "name": "CloudBeaver Community",
+  "description": "Web-based database manager.",
+  "about": "Manage PostgreSQL, MySQL, MariaDB, and other supported databases in your browser. On first start, complete the server setup and create the administrator account. For a database container on this server with a published port, enter host.docker.internal in the connection's Host field and the published host port in its Port field. Ports published only on localhost cannot be reached this way.",
+  "upstream": "https://github.com/dbeaver/cloudbeaver",
+  "categories": ["development"],
+  "variables": [
+    {
+      "key": "workspace_dir",
+      "label": "Workspace folder",
+      "description": "CloudBeaver settings and workspace files. Startup changes this folder and its contents to UID:GID 8978:8978, so use a dedicated folder.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}/workspace"
+    },
+    {
+      "key": "web_port",
+      "label": "Web UI port",
+      "description": "Host port for the web UI.",
+      "type": "port",
+      "required": true,
+      "default": 8978
+    }
+  ],
+  "containers": [
+    {
+      "image": "dbeaver/cloudbeaver:latest",
+      "environment": {
+        "CLOUDBEAVER_APP_ANONYMOUS_ACCESS_ENABLED": "false"
+      },
+      "extra_hosts": ["host.docker.internal:host-gateway"],
+      "ports": [
+        { "container": 8978, "host": "{{web_port}}", "protocol": "tcp" }
+      ],
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "{{workspace_dir}}",
+          "target": "/opt/cloudbeaver/workspace"
+        }
+      ],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}

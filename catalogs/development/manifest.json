@@ -10,6 +10,9 @@
   },
   "templates": [
     {
+      "file": "templates/cloudbeaver.json"
+    },
+    {
       "file": "templates/crates-io-proxy.json"
     },
     {
