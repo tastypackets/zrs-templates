@@ -1,0 +1,329 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "minecraft-bedrock",
+  "version": 1,
+  "name": "Minecraft Bedrock",
+  "description": "Minecraft Bedrock Dedicated Server.",
+  "about": "The Bedrock server software is downloaded from Mojang during container startup. Add the server in the \"Servers\" tab using the IP address of the host and the TCP port.",
+  "upstream": "https://github.com/itzg/docker-minecraft-bedrock-server",
+  "categories": [
+    "gaming"
+  ],
+  "variables": [
+    {
+      "key": "eula",
+      "label": "Accept the Minecraft EULA",
+      "description": "https://minecraft.net/terms",
+      "type": "toggle",
+      "true_value": "TRUE",
+      "false_value": "FALSE",
+      "default": true
+    },
+    {
+      "key": "data_dir",
+      "label": "Data directory",
+      "description": "Contains the downloaded server and server.properties.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}"
+    },
+    {
+      "key": "server_port",
+      "label": "Server port (TCP)",
+      "type": "port",
+      "required": true,
+      "default": 19132
+    },
+    {
+      "key": "host_ip",
+      "label": "Host IP address",
+      "description": "The IP address clients use to reach the host (not a hostname), or <public_ip> to resolve the host's public IP at startup.",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "mc_version",
+      "label": "Minecraft version",
+      "description": "LATEST auto-upgrades on container start, PREVIEW uses the latest preview version, or set a specific server version.",
+      "type": "text",
+      "required": true,
+      "default": "LATEST"
+    },
+    {
+      "key": "server_name",
+      "label": "Server name",
+      "type": "text"
+    },
+    {
+      "key": "game_mode",
+      "label": "Game mode",
+      "description": "Sets the game mode for new players.",
+      "type": "select",
+      "options": [
+        {
+          "value": "survival",
+          "label": "Survival"
+        },
+        {
+          "value": "creative",
+          "label": "Creative"
+        },
+        {
+          "value": "adventure",
+          "label": "Adventure"
+        }
+      ]
+    },
+    {
+      "key": "difficulty",
+      "label": "Difficulty",
+      "type": "select",
+      "options": [
+        {
+          "value": "peaceful",
+          "label": "Peaceful"
+        },
+        {
+          "value": "easy",
+          "label": "Easy"
+        },
+        {
+          "value": "normal",
+          "label": "Normal"
+        },
+        {
+          "value": "hard",
+          "label": "Hard"
+        }
+      ]
+    },
+    {
+      "key": "ops",
+      "label": "Operators",
+      "description": "A comma-separated list of XUIDs or Xbox gamertags.",
+      "type": "text"
+    },
+    {
+      "key": "allow_list",
+      "label": "Allowlist",
+      "description": "When enabled, an empty allowlist refuses all players. Add players in Allowlist users.",
+      "type": "toggle",
+      "true_value": "true",
+      "false_value": "false",
+      "default": true
+    },
+    {
+      "key": "allow_list_users",
+      "label": "Allowlist users",
+      "description": "Enables the allowlist with comma-separated name:XUID pairs.",
+      "type": "text"
+    },
+    {
+      "key": "max_players",
+      "label": "Maximum players",
+      "type": "number",
+      "integer": true,
+      "min": 1,
+      "max": 10,
+      "level": "advanced"
+    },
+    {
+      "key": "level_name",
+      "label": "World name",
+      "description": "The world name and its folder name.",
+      "type": "text",
+      "level": "advanced"
+    },
+    {
+      "key": "level_seed",
+      "label": "Level seed",
+      "description": "After world creation, the world seed cannot be changed.",
+      "type": "text",
+      "level": "advanced"
+    },
+    {
+      "key": "view_distance",
+      "label": "View distance (chunks)",
+      "type": "number",
+      "integer": true,
+      "min": 5,
+      "level": "advanced"
+    },
+    {
+      "key": "udp_port_01",
+      "label": "UDP gameplay port 1",
+      "type": "port",
+      "required": true,
+      "default": 19140,
+      "level": "advanced"
+    },
+    {
+      "key": "udp_port_02",
+      "label": "UDP gameplay port 2",
+      "type": "port",
+      "required": true,
+      "default": 19141,
+      "level": "advanced"
+    },
+    {
+      "key": "udp_port_03",
+      "label": "UDP gameplay port 3",
+      "type": "port",
+      "required": true,
+      "default": 19142,
+      "level": "advanced"
+    },
+    {
+      "key": "udp_port_04",
+      "label": "UDP gameplay port 4",
+      "type": "port",
+      "required": true,
+      "default": 19143,
+      "level": "advanced"
+    },
+    {
+      "key": "udp_port_05",
+      "label": "UDP gameplay port 5",
+      "type": "port",
+      "required": true,
+      "default": 19144,
+      "level": "advanced"
+    },
+    {
+      "key": "udp_port_06",
+      "label": "UDP gameplay port 6",
+      "type": "port",
+      "required": true,
+      "default": 19145,
+      "level": "advanced"
+    },
+    {
+      "key": "udp_port_07",
+      "label": "UDP gameplay port 7",
+      "type": "port",
+      "required": true,
+      "default": 19146,
+      "level": "advanced"
+    },
+    {
+      "key": "udp_port_08",
+      "label": "UDP gameplay port 8",
+      "type": "port",
+      "required": true,
+      "default": 19147,
+      "level": "advanced"
+    },
+    {
+      "key": "udp_port_09",
+      "label": "UDP gameplay port 9",
+      "type": "port",
+      "required": true,
+      "default": 19148,
+      "level": "advanced"
+    },
+    {
+      "key": "udp_port_10",
+      "label": "UDP gameplay port 10",
+      "type": "port",
+      "required": true,
+      "default": 19149,
+      "level": "advanced"
+    },
+    {
+      "key": "timezone",
+      "label": "Timezone",
+      "description": "A timezone like America/New_York.",
+      "type": "text",
+      "level": "advanced"
+    }
+  ],
+  "containers": [
+    {
+      "image": "itzg/minecraft-bedrock-server:stable",
+      "environment": {
+        "EULA": "{{eula}}",
+        "VERSION": "{{mc_version}}",
+        "SERVER_PORT": "19132",
+        "SERVER_UDP_PORTS": "{{host_ip}}:{{udp_port_01}}:{{udp_port_01}},{{host_ip}}:{{udp_port_02}}:{{udp_port_02}},{{host_ip}}:{{udp_port_03}}:{{udp_port_03}},{{host_ip}}:{{udp_port_04}}:{{udp_port_04}},{{host_ip}}:{{udp_port_05}}:{{udp_port_05}},{{host_ip}}:{{udp_port_06}}:{{udp_port_06}},{{host_ip}}:{{udp_port_07}}:{{udp_port_07}},{{host_ip}}:{{udp_port_08}}:{{udp_port_08}},{{host_ip}}:{{udp_port_09}}:{{udp_port_09}},{{host_ip}}:{{udp_port_10}}:{{udp_port_10}}",
+        "SERVER_NAME": "{{server_name}}",
+        "GAMEMODE": "{{game_mode}}",
+        "DIFFICULTY": "{{difficulty}}",
+        "OPS": "{{ops}}",
+        "ALLOW_LIST": "{{allow_list}}",
+        "ALLOW_LIST_USERS": "{{allow_list_users}}",
+        "MAX_PLAYERS": "{{max_players}}",
+        "LEVEL_NAME": "{{level_name}}",
+        "LEVEL_SEED": "{{level_seed}}",
+        "VIEW_DISTANCE": "{{view_distance}}",
+        "TZ": "{{timezone}}"
+      },
+      "ports": [
+        {
+          "container": 19132,
+          "host": "{{server_port}}",
+          "protocol": "tcp"
+        },
+        {
+          "container": "{{udp_port_01}}",
+          "host": "{{udp_port_01}}",
+          "protocol": "udp"
+        },
+        {
+          "container": "{{udp_port_02}}",
+          "host": "{{udp_port_02}}",
+          "protocol": "udp"
+        },
+        {
+          "container": "{{udp_port_03}}",
+          "host": "{{udp_port_03}}",
+          "protocol": "udp"
+        },
+        {
+          "container": "{{udp_port_04}}",
+          "host": "{{udp_port_04}}",
+          "protocol": "udp"
+        },
+        {
+          "container": "{{udp_port_05}}",
+          "host": "{{udp_port_05}}",
+          "protocol": "udp"
+        },
+        {
+          "container": "{{udp_port_06}}",
+          "host": "{{udp_port_06}}",
+          "protocol": "udp"
+        },
+        {
+          "container": "{{udp_port_07}}",
+          "host": "{{udp_port_07}}",
+          "protocol": "udp"
+        },
+        {
+          "container": "{{udp_port_08}}",
+          "host": "{{udp_port_08}}",
+          "protocol": "udp"
+        },
+        {
+          "container": "{{udp_port_09}}",
+          "host": "{{udp_port_09}}",
+          "protocol": "udp"
+        },
+        {
+          "container": "{{udp_port_10}}",
+          "host": "{{udp_port_10}}",
+          "protocol": "udp"
+        }
+      ],
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "{{data_dir}}",
+          "target": "/data"
+        }
+      ],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}
