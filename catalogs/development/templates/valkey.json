@@ -3,7 +3,7 @@
   "format_version": 1,
   "kind": "container-app",
   "id": "valkey",
-  "version": 1,
+  "version": 2,
   "name": "Valkey",
   "description": "In-memory data store and cache.",
   "about": "In-memory key-value store for caching and queues, compatible with Redis OSS 7.2 clients.",
@@ -140,7 +140,7 @@
   ],
   "containers": [
     {
-      "image": "valkey/valkey:9.1-trixie",
+      "image": "valkey/valkey:9-trixie",
       "command": [
         "valkey-server",
         ["--requirepass", "{{valkey_password}}"],

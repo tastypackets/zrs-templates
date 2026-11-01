@@ -3,7 +3,7 @@
   "format_version": 1,
   "kind": "container-app",
   "id": "nginx",
-  "version": 1,
+  "version": 2,
   "name": "Nginx",
   "description": "Web server and reverse proxy.",
   "about": "Serves files from the site folder by default. Supply .conf files in the config folder to define a reverse proxy or other server settings. Nginx has no web UI.",
@@ -56,7 +56,7 @@
   ],
   "containers": [
     {
-      "image": "nginx:1.30-alpine",
+      "image": "nginx:stable-alpine",
       "environment": {
         "TZ": "{{timezone}}"
       },

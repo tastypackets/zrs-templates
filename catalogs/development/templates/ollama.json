@@ -3,7 +3,7 @@
   "format_version": 1,
   "kind": "container-app",
   "id": "ollama",
-  "version": 1,
+  "version": 2,
   "name": "Ollama",
   "description": "Local large language model server with an OpenAI-compatible API.",
   "about": "Runs open-weight language models on your own hardware and serves them over an HTTP API on port 11434, with OpenAI-compatible routes under /v1. The container starts with no models. Pull one with ollama pull from the container console, or from any client pointed at the API.",
@@ -122,7 +122,7 @@
   ],
   "containers": [
     {
-      "image": "ollama/ollama:0.32.6",
+      "image": "ollama/ollama:latest",
       "environment": {
         "OLLAMA_KEEP_ALIVE": "{{keep_alive}}",
         "OLLAMA_CONTEXT_LENGTH": "{{context_length}}",

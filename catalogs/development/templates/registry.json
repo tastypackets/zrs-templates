@@ -3,7 +3,7 @@
   "format_version": 1,
   "kind": "container-app",
   "id": "registry",
-  "version": 1,
+  "version": 2,
   "name": "Distribution Registry",
   "description": "Private registry for container images.",
   "about": "An implementation of the OCI Distribution Specification for storing and distributing container images. It starts with no authentication, so anyone who can reach the port can push and pull. Container engines also reject a plain HTTP registry until it is listed as an insecure one on every client, so most setups either point the TLS fields at a certificate or put a reverse proxy in front.",
@@ -61,6 +61,8 @@
       "label": "Read-only",
       "description": "Serves pulls and rejects pushes. Turn it on before running garbage-collect, then turn it off again.",
       "type": "toggle",
+      "true_value": "{enabled: true}",
+      "false_value": null,
       "default": false,
       "level": "advanced"
     },
@@ -113,7 +115,7 @@
   ],
   "containers": [
     {
-      "image": "registry:3.1",
+      "image": "registry:3",
       "environment": {
         "REGISTRY_LOG_LEVEL": "{{log_level}}",
         "REGISTRY_HTTP_SECRET": "{{http_secret}}",
@@ -121,7 +123,7 @@
         "REGISTRY_HTTP_TLS_CERTIFICATE": "{{tls_certificate}}",
         "REGISTRY_HTTP_TLS_KEY": "{{tls_key}}",
         "REGISTRY_STORAGE_DELETE_ENABLED": "{{delete_enabled}}",
-        "REGISTRY_STORAGE_MAINTENANCE_READONLY_ENABLED": "{{read_only}}",
+        "REGISTRY_STORAGE_MAINTENANCE_READONLY": "{{read_only}}",
         "REGISTRY_PROXY_REMOTEURL": "{{proxy_remote_url}}"
       },
       "ports": [
