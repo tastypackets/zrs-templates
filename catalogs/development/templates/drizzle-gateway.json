@@ -1,0 +1,59 @@
+{
+  "$schema": "https://templates.zrs.dev/v1/zrs-app.schema.json",
+  "format_version": 1,
+  "kind": "container-app",
+  "id": "drizzle-gateway",
+  "version": 1,
+  "name": "Drizzle Gateway",
+  "description": "Self-hosted Drizzle Studio.",
+  "about": "Browse and edit data, explore schemas, and run SQL against your existing databases. For database containers on this server, use host.docker.internal with a published host port that is not bound to localhost.",
+  "upstream": "https://gateway.drizzle.team",
+  "categories": ["development"],
+  "variables": [
+    {
+      "key": "data_dir",
+      "label": "Settings folder",
+      "description": "Stores connection settings and sessions.",
+      "type": "path",
+      "required": true,
+      "default": "{{zrs_app_folder}}"
+    },
+    {
+      "key": "master_password",
+      "label": "Master password",
+      "description": "Save this password for administrator sign-in.",
+      "type": "secret",
+      "required": true
+    },
+    {
+      "key": "web_port",
+      "label": "Web UI port",
+      "description": "Host port for the web UI.",
+      "type": "port",
+      "required": true,
+      "default": 4983
+    }
+  ],
+  "containers": [
+    {
+      "image": "ghcr.io/drizzle-team/gateway:latest",
+      "environment": {
+        "PORT": "4983",
+        "STORE_PATH": "/app",
+        "MASTERPASS": "{{master_password}}"
+      },
+      "extra_hosts": ["host.docker.internal:host-gateway"],
+      "ports": [
+        { "container": 4983, "host": "{{web_port}}", "protocol": "tcp" }
+      ],
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "{{data_dir}}",
+          "target": "/app"
+        }
+      ],
+      "restart_policy": "unless-stopped"
+    }
+  ]
+}
