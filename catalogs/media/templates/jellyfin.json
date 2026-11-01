@@ -3,7 +3,7 @@
   "format_version": 1,
   "kind": "container-app",
   "id": "jellyfin",
-  "version": 1,
+  "version": 2,
   "name": "Jellyfin",
   "description": "Media server for your own movies, shows, and music.",
   "about": "Organizes your movies, shows, music, and photos and streams them to browsers, phones, TVs, and set top boxes. The first start opens a setup wizard where you create the admin account and add your libraries. Apps will not find this server by themselves, because the discovery broadcast does not cross a container network. Give them the server's address instead.",
@@ -44,7 +44,7 @@
     {
       "key": "published_server_url",
       "label": "Published server URL",
-      "description": "URL reported in UDP discovery responses. This template does not publish the discovery port, so enter the server address in your clients.",
+      "description": "URL reported in UDP discovery responses and used in Live TV stream URLs. This template does not publish the discovery port, so enter the server address in your clients.",
       "type": "text",
       "placeholder": "http://192.168.1.20:8096",
       "level": "advanced"
@@ -52,7 +52,7 @@
     {
       "key": "https_port",
       "label": "HTTPS port",
-      "description": "Publishes 8920, the container's HTTPS port. Nothing answers there until you add a certificate under Dashboard, Networking. Blank publishes nothing.",
+      "description": "Optional HTTPS port, requires a certificate and HTTPS enabled under Dashboard, Networking.",
       "type": "port",
       "level": "advanced"
     },
@@ -82,7 +82,7 @@
   ],
   "containers": [
     {
-      "image": "jellyfin/jellyfin:10.11",
+      "image": "jellyfin/jellyfin:12",
       "user": "{{run_as}}",
       "environment": {
         "JELLYFIN_PublishedServerUrl": "{{published_server_url}}",

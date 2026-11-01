@@ -3,7 +3,7 @@
   "format_version": 1,
   "kind": "container-app",
   "id": "plex",
-  "version": 1,
+  "version": 2,
   "name": "Plex Media Server",
   "description": "Streams your movie, TV, music, and photo library to the Plex apps.",
   "about": "Indexes your media, fetches artwork and metadata, and streams it to the Plex apps on phones, TVs, and consoles. Sign the server in with a claim token on the first start. Plex only offers its setup pages to localhost, and bridge networking makes traffic from the host arrive from the Docker gateway instead, so an unclaimed server needs an allowed network before you can set it up. DLNA and GDM discovery need broadcast traffic that bridge networking does not carry, so clients reach this server through your Plex account rather than by finding it.",
@@ -100,7 +100,7 @@
   ],
   "containers": [
     {
-      "image": "plexinc/pms-docker:1.43.3.10861-07dfddaeb",
+      "image": "plexinc/pms-docker:latest",
       "environment": {
         "PLEX_CLAIM": "{{claim_token}}",
         "ADVERTISE_IP": "{{advertise_url}}",

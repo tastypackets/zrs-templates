@@ -3,7 +3,7 @@
   "format_version": 1,
   "kind": "container-app",
   "id": "mariadb",
-  "version": 1,
+  "version": 2,
   "name": "MariaDB",
   "description": "Relational database server that speaks the MySQL protocol.",
   "about": "Relational database server using the MySQL protocol. Check application compatibility before replacing MySQL. First initialization creates the root account and optionally an application database and account.",
@@ -127,7 +127,7 @@
   ],
   "containers": [
     {
-      "image": "mariadb:12.3",
+      "image": "mariadb:12",
       "command": [
         "mariadbd",
         ["--innodb-buffer-pool-size", "{{buffer_pool_size}}M"],

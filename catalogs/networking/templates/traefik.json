@@ -3,7 +3,7 @@
   "format_version": 1,
   "kind": "container-app",
   "id": "traefik",
-  "version": 1,
+  "version": 2,
   "name": "Traefik",
   "description": "Reverse proxy that routes incoming traffic to your containers and manages their TLS certificates.",
   "about": "Routes traffic using labels on your application containers and can request Let's Encrypt certificates. Set hostname or path rules with traefik.http.routers labels. Traefik and the target containers must share a network.",
@@ -149,7 +149,7 @@
   ],
   "containers": [
     {
-      "image": "traefik:v3.7",
+      "image": "traefik:v3",
       "command": [
         "--entrypoints.web.address=:80",
         "--entrypoints.websecure.address=:443",

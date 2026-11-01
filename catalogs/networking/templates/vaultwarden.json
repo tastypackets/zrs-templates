@@ -3,7 +3,7 @@
   "format_version": 1,
   "kind": "container-app",
   "id": "vaultwarden",
-  "version": 1,
+  "version": 2,
   "name": "Vaultwarden",
   "description": "Unofficial password vault server compatible with Bitwarden clients.",
   "about": "Includes a web vault. This container serves HTTP, so use an HTTPS reverse proxy for browser access beyond localhost. Create your first account in the web vault. Recreate the container after changing these settings. For admin access, use HTTPS and an Argon2 PHC string generated with vaultwarden hash, then log in with the original password. Settings saved through the admin page override these template settings.",
@@ -61,7 +61,7 @@
   ],
   "containers": [
     {
-      "image": "vaultwarden/server:1.37.4",
+      "image": "vaultwarden/server:latest",
       "environment": {
         "DOMAIN": "{{domain}}",
         "SIGNUPS_ALLOWED": "{{signups_allowed}}",
