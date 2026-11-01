@@ -11,4 +11,4 @@ Choose a catalog under `catalogs/` and copy an existing template as a starting p
 3. If the CLI is installed locally, run `zrs-template --lint-only --strict --allow=unpinned_image` from the catalog directory.
 4. Open a pull request. CI builds the catalogs and validates individual documents, including excluded templates.
 
-Use a versioned image tag, such as a major release tag. Explain any use of `latest` in the pull request.
+Choose the image tag by what depends on the app. Track a major version for services other apps rely on, such as databases and proxies. Tools and self-contained apps can follow upstream's suggested tag, often `latest`. Explain the tag choice in the pull request.

@@ -11,7 +11,7 @@ Use AGENTS.md and CONTRIBUTING.md for scope, validation, and human review.
 
 Start with the official image's installation guide or registry README. Use its documented container settings and terminology. Open and read the source, a search snippet is not enough to establish configuration behavior. Check the Dockerfile or entrypoint when documentation leaves first-run behavior unclear.
 
-Choose a current stable release from upstream release metadata, then verify its container tag exists. Use documentation for that version. Explain an older release choice rather than silently using a tag from an old example or search result.
+Pick the tag based on what depends on the app. Track a major version (`mongo:9`, `traefik:v3`) for databases, proxies and other services that other apps rely on, or wherever a major upgrade is a real break for users. For tools that only connect to or manage other services, such as database clients, and for self-contained apps such as media and game servers, follow upstream's suggested tag, which is often `latest`. A stable channel tag such as `nginx:stable-alpine` also works where upstream offers one. Avoid pinning a patch release or build unless there's a reason to, such as a request or a known regression. List the registry's tags to see which moving tags exist and which version each points to, and keep the image's variant suffix, such as `-rootless`. Use documentation for that version. Explain an older release choice rather than silently using a tag from an old example or search result.
 
 Identify the image tag, persistent paths, process user, listening ports, configuration inputs, and first-run account creation. Distinguish settings read only on first initialization from settings applied on every restart.
 
