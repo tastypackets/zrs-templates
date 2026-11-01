@@ -16,6 +16,9 @@
       "file": "templates/crates-io-proxy.json"
     },
     {
+      "file": "templates/drizzle-gateway.json"
+    },
+    {
       "file": "templates/gitea.json"
     },
     {
